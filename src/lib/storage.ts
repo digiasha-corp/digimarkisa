@@ -755,16 +755,9 @@ export const HARDCODED_GOOGLE_SHEETS_URL =
   'https://script.google.com/macros/s/AKfycbys7Z8kqSpB8YAlhHgbRT_ZxYFjxEmMj0XXhOfs3ab3eAJY3UdjHCc2eKvWwmzwRp4A/exec';
 
 export function getGoogleSheetsConfig(): GoogleSheetsConfig {
-  const stored = getFromStorage<GoogleSheetsConfig>(STORAGE_KEYS.GOOGLE_SHEETS, {
+  return {
     webAppUrl: HARDCODED_GOOGLE_SHEETS_URL,
     autoSync: true,
-  });
-
-  const finalUrl = stored.webAppUrl || HARDCODED_GOOGLE_SHEETS_URL;
-
-  return {
-    webAppUrl: finalUrl,
-    autoSync: stored.autoSync ?? true,
   };
 }
 
