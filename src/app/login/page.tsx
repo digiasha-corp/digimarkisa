@@ -31,8 +31,7 @@ export default function LoginPage() {
     e.preventDefault();
     setErrorMsg('');
 
-    const cleanUsername = usernameInput.trim().toLowerCase().replace(/^@/, '');
-    const cleanNoSpace = cleanUsername.replace(/\s+/g, '');
+    const cleanUsername = usernameInput.trim().replace(/^@/, '');
     if (!cleanUsername) {
       setErrorMsg('Silakan masukkan Username / ID Pengguna Anda.');
       return;
@@ -44,21 +43,13 @@ export default function LoginPage() {
 
     const allUsers = getUserList().filter(u => u.isAktif);
     
-    // Search by username, id, or full name (case insensitive & space insensitive)
+    // Strict Case-Sensitive Username Search
     const targetUser = allUsers.find(u => {
-      const uName = String(u.username || '').trim().toLowerCase().replace(/^@/, '');
-      const uNameNoSpace = uName.replace(/\s+/g, '');
-      const uNama = String(u.nama || '').trim().toLowerCase();
-      const uNamaNoSpace = uNama.replace(/\s+/g, '');
-      const uId = String(u.id || '').trim().toLowerCase();
+      const uName = String(u.username || '').trim().replace(/^@/, '');
+      const uNama = String(u.nama || '').trim();
+      const uId = String(u.id || '').trim();
 
-      return (
-        uName === cleanUsername ||
-        uNameNoSpace === cleanNoSpace ||
-        uNama === cleanUsername ||
-        uNamaNoSpace === cleanNoSpace ||
-        uId === cleanUsername
-      );
+      return uName === cleanUsername || uNama === cleanUsername || uId === cleanUsername;
     });
 
     if (!targetUser) {
