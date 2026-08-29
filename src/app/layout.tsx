@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import Header from '@/components/Header';
 import BottomNav from '@/components/BottomNav';
+import AuthGuard from '@/components/AuthGuard';
 
 export const metadata: Metadata = {
   title: 'Stok Sirup Markisa - Mobile Web App',
@@ -27,7 +28,9 @@ export default function RootLayout({
       <body className="bg-slate-100 min-h-screen">
         <main className="mobile-container">
           <Header />
-          <div className="flex-1 w-full px-4 py-4">{children}</div>
+          <AuthGuard>
+            <div className="flex-1 w-full px-4 py-4">{children}</div>
+          </AuthGuard>
           <BottomNav />
         </main>
       </body>
