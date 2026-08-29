@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation';
 import { getUserList, saveUser, initializeStorageIfNeeded } from '@/lib/storage';
 import { switchUserAccount } from '@/lib/auth-store';
 import { User as UserType } from '@/lib/types';
-import { KeyRound, Sparkles, Lock, User, ShieldAlert, CheckCircle2 } from 'lucide-react';
-
+import { KeyRound, Sparkles, Lock, User, ShieldAlert, CheckCircle2, Loader2 } from 'lucide-react';
 import { fetchFromGoogleSheets } from '@/lib/google-sheets';
 
 export default function LoginPage() {
@@ -14,7 +13,8 @@ export default function LoginPage() {
   const [usernameInput, setUsernameInput] = useState<string>('');
   const [pinInput, setPinInput] = useState<string>('');
   const [errorMsg, setErrorMsg] = useState<string>('');
-  const [isFetchingLive, setIsFetchingLive] = useState<boolean>(false);
+  const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
+  const [loadingText, setLoadingText] = useState<string>('Memverifikasi Akun...');
 
   // Forced Change PIN State
   const [pendingUser, setPendingUser] = useState<UserType | null>(null);
@@ -37,9 +37,10 @@ export default function LoginPage() {
       return;
     }
 
-    setIsFetchingLive(true);
+    setIsLoggingIn(true);
+    setLoadingText('Memverifikasi Akun & Mengambil Data Sheets...');
+
     await fetchFromGoogleSheets().catch(() => {});
-    setIsFetchingLive(false);
 
     const allUsers = getUserList().filter(u => u.isAktif);
     
@@ -53,6 +54,7 @@ export default function LoginPage() {
     });
 
     if (!targetUser) {
+      setIsLoggingIn(false);
       setErrorMsg('Username atau PIN yang Anda masukkan salah.');
       return;
     }
@@ -65,6 +67,7 @@ export default function LoginPage() {
 
     if (isDefaultOrEmptyPin) {
       if (!inputPin || inputPin === userPin || userPin === '1234') {
+        setIsLoggingIn(false);
         setPendingUser(targetUser);
         setErrorMsg('');
         return;
@@ -72,14 +75,19 @@ export default function LoginPage() {
     }
 
     if (userPin && userPin !== inputPin) {
+      setIsLoggingIn(false);
       setErrorMsg('Username atau PIN yang Anda masukkan salah.');
       return;
     }
 
-    // Success login
+    // Success login animation & redirect
+    setLoadingText('Login Berhasil! Menyiapkan Halaman...');
     switchUserAccount(targetUser.id);
     window.dispatchEvent(new Event('userSwitched'));
-    router.push('/');
+
+    setTimeout(() => {
+      router.push('/');
+    }, 600);
   };
 
   const handleSaveNewPin = (e: React.FormEvent) => {
@@ -103,6 +111,9 @@ export default function LoginPage() {
       return;
     }
 
+    setIsLoggingIn(true);
+    setLoadingText('Menyimpan PIN Baru...');
+
     // Save updated user PIN
     const updatedUser: UserType = {
       ...pendingUser,
@@ -116,11 +127,11 @@ export default function LoginPage() {
     setPinSuccessMsg('PIN Baru Anda berhasil dibuat! Mengalihkan ke Dashboard...');
     setTimeout(() => {
       router.push('/');
-    }, 1500);
+    }, 1000);
   };
 
   return (
-    <div className="py-4 space-y-5">
+    <div className="py-4 space-y-5 relative">
       {/* Header Banner */}
       <div className="text-center bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 text-white rounded-3xl p-6 shadow-md shadow-amber-200">
         <div className="inline-flex p-3 bg-white/20 backdrop-blur-md rounded-2xl mb-3">
@@ -132,7 +143,20 @@ export default function LoginPage() {
 
       {/* VIEW 1: NORMAL LOGIN FORM */}
       {!pendingUser ? (
-        <div className="glass-card rounded-2xl p-6 space-y-4">
+        <div className="glass-card rounded-2xl p-6 space-y-4 relative overflow-hidden">
+          {/* Loading Overlay */}
+          {isLoggingIn && (
+            <div className="absolute inset-0 bg-white/90 backdrop-blur-md z-20 flex flex-col items-center justify-center p-6 text-center space-y-3 animate-fade-in">
+              <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-600 shadow-inner">
+                <Loader2 className="w-6 h-6 animate-spin text-amber-600" />
+              </div>
+              <div>
+                <h4 className="text-sm font-extrabold text-slate-900">{loadingText}</h4>
+                <p className="text-xs text-slate-500 mt-0.5">Mohon tunggu sebentar...</p>
+              </div>
+            </div>
+          )}
+
           <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 border-b pb-3">
             <KeyRound className="w-4 h-4 text-amber-600" /> Login Autentikasi Pengguna
           </h3>
@@ -153,13 +177,14 @@ export default function LoginPage() {
                 </div>
                 <input
                   type="text"
+                  disabled={isLoggingIn}
                   placeholder="Masukkan Username (cth: admin, produksi)"
                   value={usernameInput}
                   onChange={e => {
                     setUsernameInput(e.target.value);
                     setErrorMsg('');
                   }}
-                  className="w-full pl-9 pr-3.5 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:ring-2 focus:ring-amber-500 outline-none"
+                  className="w-full pl-9 pr-3.5 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:ring-2 focus:ring-amber-500 outline-none disabled:opacity-50"
                 />
               </div>
             </div>
@@ -173,28 +198,50 @@ export default function LoginPage() {
                 <input
                   type="password"
                   maxLength={8}
-                  placeholder="Masukkan PIN Keamanan (atau Kosongkan jika Pendaftaran Baru)"
+                  disabled={isLoggingIn}
+                  placeholder="Masukkan PIN Keamanan"
                   value={pinInput}
                   onChange={e => {
                     setPinInput(e.target.value);
                     setErrorMsg('');
                   }}
-                  className="w-full pl-9 pr-3.5 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 focus:ring-2 focus:ring-amber-500 outline-none tracking-wider"
+                  className="w-full pl-9 pr-3.5 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 focus:ring-2 focus:ring-amber-500 outline-none tracking-wider disabled:opacity-50"
                 />
               </div>
             </div>
 
             <button
               type="submit"
-              className="w-full py-3.5 bg-amber-600 hover:bg-amber-700 text-white font-black text-xs rounded-xl shadow-md shadow-amber-200 active:scale-95 transition-all uppercase tracking-wider"
+              disabled={isLoggingIn}
+              className="w-full py-3.5 bg-amber-600 hover:bg-amber-700 text-white font-black text-xs rounded-xl shadow-md shadow-amber-200 active:scale-95 transition-all uppercase tracking-wider flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              Masuk Ke Aplikasi
+              {isLoggingIn ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  <span>Memproses Login...</span>
+                </>
+              ) : (
+                <span>Masuk Ke Aplikasi</span>
+              )}
             </button>
           </form>
         </div>
       ) : (
         /* VIEW 2: FORCED FIRST-TIME PIN SETUP FORM */
-        <div className="glass-card rounded-2xl p-6 space-y-4 border-2 border-amber-400">
+        <div className="glass-card rounded-2xl p-6 space-y-4 border-2 border-amber-400 relative overflow-hidden">
+          {/* Loading Overlay */}
+          {isLoggingIn && (
+            <div className="absolute inset-0 bg-white/90 backdrop-blur-md z-20 flex flex-col items-center justify-center p-6 text-center space-y-3 animate-fade-in">
+              <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-600 shadow-inner">
+                <Loader2 className="w-6 h-6 animate-spin text-amber-600" />
+              </div>
+              <div>
+                <h4 className="text-sm font-extrabold text-slate-900">{loadingText}</h4>
+                <p className="text-xs text-slate-500 mt-0.5">Mohon tunggu sebentar...</p>
+              </div>
+            </div>
+          )}
+
           <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200 flex items-start gap-2.5">
             <ShieldAlert className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
             <div>
@@ -226,13 +273,14 @@ export default function LoginPage() {
                 type="password"
                 maxLength={6}
                 required
+                disabled={isLoggingIn}
                 placeholder="Masukkan 4-6 Digit PIN Baru"
                 value={newPin}
                 onChange={e => {
                   setNewPin(e.target.value);
                   setErrorMsg('');
                 }}
-                className="w-full px-3.5 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-800 focus:ring-2 focus:ring-amber-500 outline-none text-center tracking-widest"
+                className="w-full px-3.5 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-800 focus:ring-2 focus:ring-amber-500 outline-none text-center tracking-widest disabled:opacity-50"
               />
             </div>
 
@@ -242,34 +290,44 @@ export default function LoginPage() {
                 type="password"
                 maxLength={6}
                 required
+                disabled={isLoggingIn}
                 placeholder="Ulangi PIN Baru Anda"
                 value={confirmPin}
                 onChange={e => {
                   setConfirmPin(e.target.value);
                   setErrorMsg('');
                 }}
-                className="w-full px-3.5 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-800 focus:ring-2 focus:ring-amber-500 outline-none text-center tracking-widest"
+                className="w-full px-3.5 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-800 focus:ring-2 focus:ring-amber-500 outline-none text-center tracking-widest disabled:opacity-50"
               />
             </div>
 
             <div className="flex items-center gap-2 pt-2">
               <button
                 type="button"
+                disabled={isLoggingIn}
                 onClick={() => {
                   setPendingUser(null);
                   setNewPin('');
                   setConfirmPin('');
                   setErrorMsg('');
                 }}
-                className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold text-xs rounded-xl hover:bg-slate-200"
+                className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold text-xs rounded-xl hover:bg-slate-200 disabled:opacity-50"
               >
                 Batal
               </button>
               <button
                 type="submit"
-                className="flex-1 py-3 bg-amber-600 hover:bg-amber-700 text-white font-black text-xs rounded-xl shadow-md shadow-amber-200 active:scale-95 transition-all uppercase tracking-wider"
+                disabled={isLoggingIn}
+                className="flex-1 py-3 bg-amber-600 hover:bg-amber-700 text-white font-black text-xs rounded-xl shadow-md shadow-amber-200 active:scale-95 transition-all uppercase tracking-wider flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                Simpan PIN Baru
+                {isLoggingIn ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    <span>Menyimpan...</span>
+                  </>
+                ) : (
+                  <span>Simpan PIN Baru</span>
+                )}
               </button>
             </div>
           </form>
