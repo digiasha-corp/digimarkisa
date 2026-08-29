@@ -16,19 +16,18 @@ body {
   user-select: none;
 }
 
-/* Flexible Responsive Web App Container */
-.app-container {
+/* Fluid Responsive Container for Mobile and Desktop */
+.mobile-container {
   width: 100%;
   min-width: 320px;
-  max-width: 1280px; /* Fluid responsive max width for mobile, tablet, and desktop */
+  max-width: 100%;
   margin: 0 auto;
   min-height: 100vh;
   background-color: #ffffff;
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.04);
   position: relative;
   display: flex;
   flex-direction: column;
-  padding-bottom: 84px;
+  padding-bottom: 80px; /* Space for fixed bottom navbar */
 }
 
 /* Custom Glassmorphism */

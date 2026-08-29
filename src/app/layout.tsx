@@ -26,10 +26,10 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body className="bg-slate-100 min-h-screen">
-        <main className="app-container">
+        <main className="mobile-container">
           <Header />
           <AuthGuard>
-            <div className="flex-1 w-full px-4 py-4">{children}</div>
+            <div className="flex-1 w-full max-w-7xl mx-auto px-4 py-4">{children}</div>
           </AuthGuard>
           <BottomNav />
         </main>
