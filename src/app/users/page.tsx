@@ -523,7 +523,7 @@ export default function UserManagementPage() {
                 <input
                   type="text"
                   required
-                  placeholder="Contoh: Budi Santoso"
+                  placeholder="Contoh: Pradipta Evan"
                   value={nama}
                   onChange={e => setNama(e.target.value)}
                   className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-amber-500 outline-none"
@@ -536,7 +536,7 @@ export default function UserManagementPage() {
                   <input
                     type="text"
                     required
-                    placeholder="budi"
+                    placeholder="pradipta"
                     value={username}
                     onChange={e => setUsername(e.target.value)}
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-amber-500 outline-none"
