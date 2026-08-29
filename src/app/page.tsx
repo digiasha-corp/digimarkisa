@@ -299,11 +299,10 @@ export default function DashboardPage() {
       </div>
 
       {/* ========================================================================= */}
-      {/* REPORT TABLES GRID CONTAINER (MOBILE 1 COL, DESKTOP 2 COLS) */}
+      {/* 1. TABEL LAPORAN STOK (STANDARD HTML TABLE) */}
       {/* ========================================================================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {(activeReportSection === 'ALL' || activeReportSection === 'STOK') && (
-          <div className="glass-card rounded-2xl p-4 space-y-3 border-2 border-amber-300">
+      {(activeReportSection === 'ALL' || activeReportSection === 'STOK') && (
+        <div className="glass-card rounded-2xl p-4 space-y-3 border-2 border-amber-300">
           <div className="flex items-center justify-between border-b pb-2.5">
             <h3 className="font-black text-slate-900 text-sm flex items-center gap-2">
               <Wine className="w-4 h-4 text-amber-600" /> 1. Tabel Laporan Stok Barang
@@ -546,7 +545,6 @@ export default function DashboardPage() {
           )}
         </div>
       )}
-      </div>
     </div>
   );
 }

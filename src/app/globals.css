@@ -16,19 +16,19 @@ body {
   user-select: none;
 }
 
-/* Centered Responsive Web App Container (Mobile & Desktop Flexible) */
-.mobile-container {
+/* Flexible Responsive Web App Container */
+.app-container {
   width: 100%;
   min-width: 320px;
-  max-width: 1280px; /* Responsive flexible layout for mobile and desktop */
+  max-width: 1280px; /* Fluid responsive max width for mobile, tablet, and desktop */
   margin: 0 auto;
   min-height: 100vh;
   background-color: #ffffff;
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.04);
   position: relative;
   display: flex;
   flex-direction: column;
-  padding-bottom: 80px; /* Space for fixed bottom navbar */
+  padding-bottom: 84px;
 }
 
 /* Custom Glassmorphism */
