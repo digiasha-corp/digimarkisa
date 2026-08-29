@@ -7,18 +7,6 @@ export interface AuthState {
   allowedBranches: Branch[];
 }
 
-export const ADMIN_ROLE_PERMISSIONS: RolePermissions = {
-  canManageProducts: true,
-  canManageBranches: true,
-  canManageUsers: true,
-  canAddProduction: true,
-  canTransferStock: true,
-  canReceiveStock: true,
-  canRecordSale: true,
-  canViewAllBranches: true,
-  canManageSettings: true,
-};
-
 export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
   canManageProducts: true,
   canManageBranches: false,
@@ -31,21 +19,36 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
   canManageSettings: false,
 };
 
-export function ensureRolePermissions(role: Role | null): Role | null {
-  if (!role) return null;
-  let permissions = role.permissions;
+export function parseRolePermissions(permissionsInput: any): RolePermissions {
+  let permissions = permissionsInput;
   if (typeof permissions === 'string') {
     try {
       permissions = JSON.parse(permissions);
     } catch (e) {}
   }
-  if (!permissions || typeof permissions !== 'object') {
-    const isAdminRole = (role.id || '').toLowerCase().includes('admin') || (role.namaRole || '').toLowerCase().includes('admin');
-    permissions = isAdminRole ? { ...ADMIN_ROLE_PERMISSIONS } : { ...DEFAULT_ROLE_PERMISSIONS };
+
+  if (permissions && typeof permissions === 'object') {
+    return {
+      canManageProducts: Boolean(permissions.canManageProducts),
+      canManageBranches: Boolean(permissions.canManageBranches),
+      canManageUsers: Boolean(permissions.canManageUsers),
+      canAddProduction: Boolean(permissions.canAddProduction),
+      canTransferStock: Boolean(permissions.canTransferStock),
+      canReceiveStock: Boolean(permissions.canReceiveStock),
+      canRecordSale: Boolean(permissions.canRecordSale),
+      canViewAllBranches: Boolean(permissions.canViewAllBranches),
+      canManageSettings: Boolean(permissions.canManageSettings),
+    };
   }
+
+  return { ...DEFAULT_ROLE_PERMISSIONS };
+}
+
+export function ensureRolePermissions(role: Role | null): Role | null {
+  if (!role) return null;
   return {
     ...role,
-    permissions,
+    permissions: parseRolePermissions(role.permissions),
   };
 }
 
