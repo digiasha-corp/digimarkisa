@@ -40,7 +40,8 @@ export function ensureRolePermissions(role: Role | null): Role | null {
     } catch (e) {}
   }
   if (!permissions || typeof permissions !== 'object') {
-    permissions = role.id === 'role-admin' ? { ...ADMIN_ROLE_PERMISSIONS } : { ...DEFAULT_ROLE_PERMISSIONS };
+    const isAdminRole = (role.id || '').toLowerCase().includes('admin') || (role.namaRole || '').toLowerCase().includes('admin');
+    permissions = isAdminRole ? { ...ADMIN_ROLE_PERMISSIONS } : { ...DEFAULT_ROLE_PERMISSIONS };
   }
   return {
     ...role,
