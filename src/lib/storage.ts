@@ -1,11 +1,98 @@
-import { Barang, Branch, Role, User, StokLokasi, TransaksiProduksi, TransaksiTransfer, TransaksiPenjualan, GoogleSheetsConfig, ItemProduksi, ItemTransfer } from './types';
+import {
+  Barang,
+  Branch,
+  Role,
+  User,
+  StokLokasi,
+  TransaksiProduksi,
+  TransaksiTransfer,
+  TransaksiPenjualan,
+  TransaksiMutasiStok,
+  ItemProduksi,
+  ItemTransfer,
+  GoogleSheetsConfig,
+} from './types';
 
-// Seed Roles
+export const STORAGE_KEYS = {
+  BARANG: 'stock_app_barang',
+  BRANCHES: 'stock_app_branches',
+  ROLES: 'stock_app_roles',
+  USERS: 'stock_app_users',
+  STOK: 'stock_app_stok',
+  PRODUKSI: 'stock_app_produksi',
+  TRANSFER: 'stock_app_transfer',
+  PENJUALAN: 'stock_app_penjualan',
+  MUTASI: 'stock_app_mutasi_stok',
+  CURRENT_USER: 'stock_app_current_user',
+  GOOGLE_SHEETS: 'stock_app_gsheet_config',
+};
+
+let isImportingFromSheets = false;
+
+export function setImportingFlag(val: boolean): void {
+  isImportingFromSheets = val;
+}
+
+// Initial Seed Fallback Data
+export const INITIAL_BARANG: Barang[] = [
+  {
+    id: 'brg-bdn-500',
+    kodeBarang: 'SRP-BDN-500ML',
+    namaBarang: 'Bintang Dunia 500ml',
+    nilaiUkuran: 500,
+    satuanUkuran: 'ml',
+    keterangan: 'Sirup Markisa Varian Botol Kaca 500ml',
+    isAktif: true,
+    createdAt: '2026-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'brg-bdn-1000',
+    kodeBarang: 'SRP-BDN-1L',
+    namaBarang: 'Bintang Dunia 1Lt',
+    nilaiUkuran: 1,
+    satuanUkuran: 'Lt',
+    keterangan: 'Sirup Markisa Varian Botol Besar 1 Liter',
+    isAktif: true,
+    createdAt: '2026-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'brg-bol-500',
+    kodeBarang: 'SRP-BOL-500ML',
+    namaBarang: 'Bola Dunia 500ml',
+    nilaiUkuran: 500,
+    satuanUkuran: 'ml',
+    keterangan: 'Sirup Markisa Spesial Bola Dunia 500ml',
+    isAktif: true,
+    createdAt: '2026-01-01T00:00:00.000Z',
+  },
+];
+
+export const INITIAL_BRANCHES: Branch[] = [
+  {
+    id: 'branch-pusat-produksi',
+    kodeBranch: 'PROD-01',
+    namaBranch: 'Pusat Produksi',
+    tipe: ['Produksi'],
+    alamat: 'Jl. Pabrik Sirup No. 1, Makassar',
+    isAktif: true,
+    createdAt: '2026-01-01T00:00:00.000Z',
+  },
+  {
+    id: 'branch-gudang-utama',
+    kodeBranch: 'GDG-01',
+    namaBranch: 'Gudang Logistik & Storage',
+    tipe: ['Gudang'],
+    alamat: 'Kawasan Industri Makassar',
+    isAktif: true,
+    createdAt: '2026-01-01T00:00:00.000Z',
+  },
+];
+
 export const INITIAL_ROLES: Role[] = [
   {
     id: 'role-admin',
-    namaRole: 'Super Admin / Pemilik',
-    deskripsi: 'Akses penuh ke seluruh menu, branch, user management, dan pengaturan.',
+    namaRole: 'Super Admin',
+    deskripsi: 'Akses penuh ke seluruh cabang, produksi, mutasi stok, laporan & pengguna.',
     permissions: {
       canManageProducts: true,
       canManageBranches: true,
@@ -21,9 +108,9 @@ export const INITIAL_ROLES: Role[] = [
   {
     id: 'role-operator-produksi',
     namaRole: 'Operator Produksi',
-    deskripsi: 'Mencatat hasil produksi sirup di branch Pabrik/Produksi.',
+    deskripsi: 'Mengisi laporan produksi sirup dan melihat stok cabang produksi.',
     permissions: {
-      canManageProducts: false,
+      canManageProducts: true,
       canManageBranches: false,
       canManageUsers: false,
       canAddProduction: true,
@@ -39,7 +126,7 @@ export const INITIAL_ROLES: Role[] = [
     namaRole: 'Staff Gudang',
     deskripsi: 'Mengirim dan menerima mutasi barang antar gudang & branch.',
     permissions: {
-      canManageProducts: false,
+      canManageProducts: true,
       canManageBranches: false,
       canManageUsers: false,
       canAddProduction: false,
@@ -55,7 +142,7 @@ export const INITIAL_ROLES: Role[] = [
     namaRole: 'Staff Store / Kasir',
     deskripsi: 'Mencatat penjualan produk di toko/outlet dan menerima barang masuk.',
     permissions: {
-      canManageProducts: false,
+      canManageProducts: true,
       canManageBranches: false,
       canManageUsers: false,
       canAddProduction: false,
@@ -68,193 +155,22 @@ export const INITIAL_ROLES: Role[] = [
   },
 ];
 
-// Seed Branches
-export const INITIAL_BRANCHES: Branch[] = [
-  {
-    id: 'branch-1',
-    kodeBranch: 'HQ-MEDAN',
-    namaBranch: 'Pusat Produksi & Store Markisa Utama',
-    tipe: ['Produksi', 'Gudang', 'Store'],
-    alamat: 'Jl. Industri Sirup No. 12, Medan',
-    isAktif: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'branch-2',
-    kodeBranch: 'GDG-01',
-    namaBranch: 'Gudang Logistik & Storage Regional',
-    tipe: ['Gudang'],
-    alamat: 'Jl. Raya Pergudangan Blok A4, Medan',
-    isAktif: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'branch-3',
-    kodeBranch: 'STR-01',
-    namaBranch: 'Outlet Store & Display Mall',
-    tipe: ['Store', 'Gudang'],
-    alamat: 'Jl. Ahmad Yani No. 88, Medan',
-    isAktif: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'branch-4',
-    kodeBranch: 'STR-02',
-    namaBranch: 'Outlet Store Bandara Kualanamu',
-    tipe: ['Store'],
-    alamat: 'Bandara Kualanamu Gate 3, Deli Serdang',
-    isAktif: true,
-    createdAt: new Date().toISOString(),
-  },
-];
-
-// Seed Master Barang
-export const INITIAL_BARANG: Barang[] = [
-  {
-    id: 'brg-1',
-    kodeBarang: 'SRP-MRN-250ML',
-    namaBarang: 'Sirup Markisa Murni Extra Super',
-    nilaiUkuran: 250,
-    satuanUkuran: 'ml',
-    keterangan: 'Sirup markisa konsentrat murni botol kaca 250ml',
-    isAktif: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'brg-2',
-    kodeBarang: 'SRP-MRN-500ML',
-    namaBarang: 'Sirup Markisa Murni Extra Super',
-    nilaiUkuran: 500,
-    satuanUkuran: 'ml',
-    keterangan: 'Sirup markisa konsentrat murni botol kaca 500ml',
-    isAktif: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'brg-3',
-    kodeBarang: 'SRP-MRN-1LT',
-    namaBarang: 'Sirup Markisa Murni Family Size',
-    nilaiUkuran: 1,
-    satuanUkuran: 'Lt',
-    keterangan: 'Sirup markisa konsentrat murni botol 1 Liter',
-    isAktif: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'brg-4',
-    kodeBarang: 'SRP-RDY-250ML',
-    namaBarang: 'Sirup Markisa Siap Minum (Ready to Drink)',
-    nilaiUkuran: 250,
-    satuanUkuran: 'ml',
-    keterangan: 'Minuman sirup markisa segar botol PET 250ml',
-    isAktif: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'brg-5',
-    kodeBarang: 'SRP-RDY-500ML',
-    namaBarang: 'Sirup Markisa Siap Minum (Ready to Drink)',
-    nilaiUkuran: 500,
-    satuanUkuran: 'ml',
-    keterangan: 'Minuman sirup markisa segar botol PET 500ml',
-    isAktif: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'brg-6',
-    kodeBarang: 'BHN-FRT-KG',
-    namaBarang: 'Buah Markisa Segar Asli Brastagi',
-    nilaiUkuran: 1,
-    satuanUkuran: 'kg',
-    keterangan: 'Bahan baku buah markisa segar dari petani Brastagi',
-    isAktif: true,
-    createdAt: new Date().toISOString(),
-  },
-];
-
-// Seed Users
 export const INITIAL_USERS: User[] = [
   {
-    id: 'user-admin',
+    id: 'usr-admin',
     nama: 'Super Admin',
     username: 'admin',
     pin: '1234',
     roleId: 'role-admin',
     assignedBranchIds: 'ALL',
     isAktif: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'user-operator',
-    nama: 'Joko Raharjo (Produksi)',
-    username: 'produksi',
-    pin: '1111',
-    roleId: 'role-operator-produksi',
-    assignedBranchIds: ['branch-1'],
-    isAktif: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'user-gudang',
-    nama: 'Siti Aminah (Gudang)',
-    username: 'gudang',
-    pin: '2222',
-    roleId: 'role-staff-gudang',
-    assignedBranchIds: ['branch-2'],
-    isAktif: true,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'user-kasir',
-    nama: 'Rina Wijaya (Store Pusat)',
-    username: 'kasir',
-    pin: '3333',
-    roleId: 'role-kasir-store',
-    assignedBranchIds: ['branch-1', 'branch-3'],
-    isAktif: true,
-    createdAt: new Date().toISOString(),
+    createdAt: '2026-01-01T00:00:00.000Z',
   },
 ];
 
-// Seed Stok
-export const INITIAL_STOK: StokLokasi[] = [
-  { branchId: 'branch-1', barangId: 'brg-1', jumlahStok: 500 },
-  { branchId: 'branch-1', barangId: 'brg-2', jumlahStok: 350 },
-  { branchId: 'branch-1', barangId: 'brg-3', jumlahStok: 200 },
-  { branchId: 'branch-1', barangId: 'brg-6', jumlahStok: 120 },
+export const INITIAL_STOK: StokLokasi[] = [];
 
-  { branchId: 'branch-2', barangId: 'brg-1', jumlahStok: 150 },
-  { branchId: 'branch-2', barangId: 'brg-2', jumlahStok: 100 },
-  { branchId: 'branch-2', barangId: 'brg-4', jumlahStok: 300 },
-
-  { branchId: 'branch-3', barangId: 'brg-1', jumlahStok: 40 },
-  { branchId: 'branch-3', barangId: 'brg-2', jumlahStok: 30 },
-  { branchId: 'branch-3', barangId: 'brg-4', jumlahStok: 80 },
-
-  { branchId: 'branch-4', barangId: 'brg-1', jumlahStok: 25 },
-  { branchId: 'branch-4', barangId: 'brg-5', jumlahStok: 60 },
-];
-
-const STORAGE_KEYS = {
-  BARANG: 'stock_app_barang',
-  BRANCHES: 'stock_app_branches',
-  ROLES: 'stock_app_roles',
-  USERS: 'stock_app_users',
-  STOK: 'stock_app_stok',
-  PRODUKSI: 'stock_app_produksi',
-  TRANSFER: 'stock_app_transfer',
-  PENJUALAN: 'stock_app_penjualan',
-  CURRENT_USER: 'stock_app_active_user',
-  GOOGLE_SHEETS: 'stock_app_gsheet_config',
-};
-
-let isImportingFromSheets = false;
-
-export function setImportingFlag(val: boolean): void {
-  isImportingFromSheets = val;
-}
-
-// Helper Storage Getters & Setters
+// Storage Helpers
 export function getFromStorage<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback;
   try {
@@ -284,25 +200,8 @@ export function initializeStorageIfNeeded(): void {
   if (!localStorage.getItem(STORAGE_KEYS.BARANG)) {
     localStorage.setItem(STORAGE_KEYS.BARANG, JSON.stringify(INITIAL_BARANG));
   }
-
-  const rawBranches = localStorage.getItem(STORAGE_KEYS.BRANCHES);
-  if (!rawBranches) {
+  if (!localStorage.getItem(STORAGE_KEYS.BRANCHES)) {
     localStorage.setItem(STORAGE_KEYS.BRANCHES, JSON.stringify(INITIAL_BRANCHES));
-  } else {
-    try {
-      const parsed: any[] = JSON.parse(rawBranches);
-      let needsMigration = false;
-      const normalized = parsed.map(b => {
-        if (typeof b.tipe === 'string') {
-          needsMigration = true;
-          return { ...b, tipe: [b.tipe] };
-        }
-        return b;
-      });
-      if (needsMigration) {
-        localStorage.setItem(STORAGE_KEYS.BRANCHES, JSON.stringify(normalized));
-      }
-    } catch (e) {}
   }
   if (!localStorage.getItem(STORAGE_KEYS.ROLES)) {
     localStorage.setItem(STORAGE_KEYS.ROLES, JSON.stringify(INITIAL_ROLES));
@@ -310,12 +209,9 @@ export function initializeStorageIfNeeded(): void {
   if (!localStorage.getItem(STORAGE_KEYS.USERS)) {
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(INITIAL_USERS));
   }
-  if (!localStorage.getItem(STORAGE_KEYS.STOK)) {
-    localStorage.setItem(STORAGE_KEYS.STOK, JSON.stringify(INITIAL_STOK));
-  }
 }
 
-// Product Management API
+// Product API
 export function getBarangList(): Barang[] {
   return getFromStorage<Barang[]>(STORAGE_KEYS.BARANG, INITIAL_BARANG);
 }
@@ -331,42 +227,6 @@ export function saveBarang(barang: Barang): void {
   saveToStorage(STORAGE_KEYS.BARANG, list);
 }
 
-export function canDeleteBarang(barangId: string): { canDelete: boolean; reason?: string } {
-  const produksis = getFromStorage<TransaksiProduksi[]>(STORAGE_KEYS.PRODUKSI, []);
-  if (produksis.some(p => p.items?.some(it => it.barangId === barangId))) {
-    return { canDelete: false, reason: 'Barang sudah pernah dicatat di transaksi Produksi.' };
-  }
-
-  const transfers = getFromStorage<TransaksiTransfer[]>(STORAGE_KEYS.TRANSFER, []);
-  if (transfers.some(t => t.items?.some(it => it.barangId === barangId))) {
-    return { canDelete: false, reason: 'Barang sudah pernah dicatat di transaksi Mutasi/Transfer.' };
-  }
-
-  const penjualans = getFromStorage<TransaksiPenjualan[]>(STORAGE_KEYS.PENJUALAN, []);
-  if (penjualans.some(pj => pj.items?.some(it => it.barangId === barangId))) {
-    return { canDelete: false, reason: 'Barang sudah pernah dicatat di transaksi Penjualan.' };
-  }
-
-  const stoks = getFromStorage<StokLokasi[]>(STORAGE_KEYS.STOK, []);
-  const hasNonZeroStock = stoks.some(s => s.barangId === barangId && s.jumlahStok > 0);
-  if (hasNonZeroStock) {
-    return { canDelete: false, reason: 'Barang masih memiliki sisa stok di branch.' };
-  }
-
-  return { canDelete: true };
-}
-
-export function deleteBarang(barangId: string): { success: boolean; message: string } {
-  const check = canDeleteBarang(barangId);
-  if (!check.canDelete) {
-    return { success: false, message: check.reason || 'Barang tidak dapat dihapus.' };
-  }
-
-  const list = getBarangList().filter(b => b.id !== barangId);
-  saveToStorage(STORAGE_KEYS.BARANG, list);
-  return { success: true, message: 'Barang berhasil dihapus dari Pendaftaran Barang.' };
-}
-
 export function toggleBarangStatus(barangId: string): void {
   const list = getBarangList();
   const item = list.find(b => b.id === barangId);
@@ -376,20 +236,42 @@ export function toggleBarangStatus(barangId: string): void {
   }
 }
 
-// Branch Management API
+export function canDeleteBarang(barangId: string): { canDelete: boolean; reason?: string } {
+  const mutasiList = getMutasiList();
+  const used = mutasiList.some(m => m.barangId === barangId);
+  if (used) {
+    return { canDelete: false, reason: 'Barang ini memiliki riwayat mutasi stok (Produksi/Transfer/Penjualan).' };
+  }
+  return { canDelete: true };
+}
+
+export function deleteBarang(barangId: string): { success: boolean; message: string } {
+  const audit = canDeleteBarang(barangId);
+  if (!audit.canDelete) {
+    return { success: false, message: audit.reason || 'Barang tidak dapat dihapus.' };
+  }
+  const list = getBarangList();
+  const next = list.filter(b => b.id !== barangId);
+  saveToStorage(STORAGE_KEYS.BARANG, next);
+  return { success: true, message: 'Barang berhasil dihapus.' };
+}
+
+// Branch API
 export function getBranchList(): Branch[] {
-  const branches = getFromStorage<any[]>(STORAGE_KEYS.BRANCHES, INITIAL_BRANCHES);
-  return branches.map(b => ({
-    ...b,
-    tipe: Array.isArray(b.tipe) ? b.tipe : [b.tipe],
-  }));
+  const rawBranches = getFromStorage<Branch[]>(STORAGE_KEYS.BRANCHES, INITIAL_BRANCHES);
+  return rawBranches.map(b => {
+    if (typeof b.tipe === 'string') {
+      return { ...b, tipe: [b.tipe] };
+    }
+    return b;
+  });
 }
 
 export function saveBranch(branch: Branch): void {
   const list = getBranchList();
-  const idx = list.findIndex(b => b.id === branch.id);
-  if (idx >= 0) {
-    list[idx] = branch;
+  const index = list.findIndex(b => b.id === branch.id);
+  if (index >= 0) {
+    list[index] = branch;
   } else {
     list.unshift(branch);
   }
@@ -405,7 +287,7 @@ export function toggleBranchStatus(branchId: string): void {
   }
 }
 
-// Roles & User Management API
+// Roles & User API
 export function getRoleList(): Role[] {
   const rawRoles = getFromStorage<Role[]>(STORAGE_KEYS.ROLES, INITIAL_ROLES);
   return rawRoles.map(r => {
@@ -414,29 +296,17 @@ export function getRoleList(): Role[] {
       try { permissions = JSON.parse(permissions); } catch (e) {}
     }
     if (!permissions || typeof permissions !== 'object') {
-      permissions = r.id === 'role-admin'
-        ? {
-            canManageProducts: true,
-            canManageBranches: true,
-            canManageUsers: true,
-            canAddProduction: true,
-            canTransferStock: true,
-            canReceiveStock: true,
-            canRecordSale: true,
-            canViewAllBranches: true,
-            canManageSettings: true,
-          }
-        : {
-            canManageProducts: true,
-            canManageBranches: false,
-            canManageUsers: false,
-            canAddProduction: true,
-            canTransferStock: true,
-            canReceiveStock: true,
-            canRecordSale: true,
-            canViewAllBranches: false,
-            canManageSettings: false,
-          };
+      permissions = {
+        canManageProducts: true,
+        canManageBranches: false,
+        canManageUsers: false,
+        canAddProduction: true,
+        canTransferStock: true,
+        canReceiveStock: true,
+        canRecordSale: true,
+        canViewAllBranches: false,
+        canManageSettings: false,
+      };
     }
     return { ...r, permissions };
   });
@@ -514,22 +384,6 @@ export function canDeleteUser(userId: string): { canDelete: boolean; reason?: st
   if (activeUser && activeUser.id === userId) {
     return { canDelete: false, reason: 'Anda tidak dapat menghapus akun pengguna yang sedang Anda gunakan saat ini.' };
   }
-
-  const produksis = getFromStorage<TransaksiProduksi[]>(STORAGE_KEYS.PRODUKSI, []);
-  if (produksis.some(p => p.userId === userId)) {
-    return { canDelete: false, reason: 'User ini memiliki riwayat pencatatan transaksi Produksi.' };
-  }
-
-  const transfers = getFromStorage<TransaksiTransfer[]>(STORAGE_KEYS.TRANSFER, []);
-  if (transfers.some(t => t.userPengirimId === userId || t.userPenerimaId === userId)) {
-    return { canDelete: false, reason: 'User ini memiliki riwayat pencatatan transaksi Mutasi/Transfer.' };
-  }
-
-  const penjualans = getFromStorage<TransaksiPenjualan[]>(STORAGE_KEYS.PENJUALAN, []);
-  if (penjualans.some(pj => pj.userId === userId)) {
-    return { canDelete: false, reason: 'User ini memiliki riwayat pencatatan transaksi Penjualan Kasir.' };
-  }
-
   return { canDelete: true };
 }
 
@@ -543,7 +397,6 @@ export function deleteUser(userId: string): { success: boolean; message: string 
   saveToStorage(STORAGE_KEYS.USERS, next);
   return { success: true, message: 'Pengguna berhasil dihapus permanen.' };
 }
-
 
 export function getActiveUser(): User | null {
   if (typeof window === 'undefined') return null;
@@ -566,45 +419,116 @@ export function logoutUser(): void {
   window.dispatchEvent(new Event('userSwitched'));
 }
 
-// Stock & Inventory Calculations
-export function getStokLokasiList(): StokLokasi[] {
-  return getFromStorage<StokLokasi[]>(STORAGE_KEYS.STOK, INITIAL_STOK);
+// =========================================================================
+// SINGLE LEDGER MUTASI STOK API (MODEL ARUS MUTASI BARANG)
+// =========================================================================
+
+export function getMutasiList(): TransaksiMutasiStok[] {
+  return getFromStorage<TransaksiMutasiStok[]>(STORAGE_KEYS.MUTASI, []);
 }
 
-export function updateStok(branchId: string, barangId: string, deltaJumlah: number): void {
-  const stoks = getStokLokasiList();
-  const idx = stoks.findIndex(s => s.branchId === branchId && s.barangId === barangId);
-  if (idx >= 0) {
-    stoks[idx].jumlahStok = Math.max(0, stoks[idx].jumlahStok + deltaJumlah);
-  } else {
-    stoks.push({
-      branchId,
-      barangId,
-      jumlahStok: Math.max(0, deltaJumlah),
-    });
+export function addMutasiRecords(records: TransaksiMutasiStok | TransaksiMutasiStok[]): void {
+  const list = getMutasiList();
+  const newItems = Array.isArray(records) ? records : [records];
+  newItems.forEach(item => {
+    const existingIndex = list.findIndex(m => m.id === item.id);
+    if (existingIndex >= 0) {
+      list[existingIndex] = item;
+    } else {
+      list.unshift(item);
+    }
+  });
+  saveToStorage(STORAGE_KEYS.MUTASI, list);
+}
+
+// DYNAMIC STOCK CALCULATION FROM SINGLE LEDGER
+export function calculateStokLokasiList(): StokLokasi[] {
+  const mutasiList = getMutasiList();
+  const branches = getBranchList().filter(b => b.isAktif);
+  const barangList = getBarangList().filter(b => b.isAktif);
+
+  const result: StokLokasi[] = [];
+
+  for (const branch of branches) {
+    for (const barang of barangList) {
+      let totalStok = 0;
+
+      for (const m of mutasiList) {
+        const isMatchBarang = m.barangId === barang.id || m.kodeBarang === barang.kodeBarang;
+        if (!isMatchBarang) continue;
+
+        const qty = Number(m.jumlah || 0);
+
+        // Barang Masuk Ke Branch Ini
+        if (m.jenisTransaksi === 'Produksi' && m.tujuanBranchId === branch.id) {
+          totalStok += qty;
+        }
+        if (
+          m.jenisTransaksi === 'Transfer' &&
+          m.tujuanBranchId === branch.id &&
+          (m.status === 'Success' || (m.status as any) === 'On Hand')
+        ) {
+          totalStok += qty;
+        }
+
+        // Barang Keluar Dari Branch Ini
+        if (m.jenisTransaksi === 'Penjualan' && m.sumberBranchId === branch.id) {
+          totalStok -= qty;
+        }
+        if (m.jenisTransaksi === 'Transfer' && m.sumberBranchId === branch.id) {
+          totalStok -= qty;
+        }
+      }
+
+      result.push({
+        branchId: branch.id,
+        barangId: barang.id,
+        jumlahStok: Math.max(0, totalStok),
+      });
+    }
   }
-  saveToStorage(STORAGE_KEYS.STOK, stoks);
+
+  return result;
+}
+
+export function getStokLokasiList(): StokLokasi[] {
+  return calculateStokLokasiList();
 }
 
 export function getStokForBranchAndBarang(branchId: string, barangId: string): number {
-  const stoks = getStokLokasiList();
+  const stoks = calculateStokLokasiList();
   const found = stoks.find(s => s.branchId === branchId && s.barangId === barangId);
   return found ? found.jumlahStok : 0;
 }
 
-// Produksi Transaction API (Multi-Item Support)
+// Transaction API wrappers that auto-populate Single Ledger Mutasi Stok
 export function getProduksiList(): TransaksiProduksi[] {
-  const raw = getFromStorage<any[]>(STORAGE_KEYS.PRODUKSI, []);
-  // Normalize legacy single item data to multi-item format
-  return raw.map(r => {
-    if (r.barangId && !r.items) {
-      return {
-        ...r,
-        items: [{ barangId: r.barangId, namaBarang: 'Produk', jumlah: r.jumlah, batchNo: r.batchNo || '-', catatan: r.catatan }],
+  const mutasi = getMutasiList().filter(m => m.jenisTransaksi === 'Produksi');
+  const grouped: { [noRef: string]: TransaksiProduksi } = {};
+
+  mutasi.forEach(m => {
+    const ref = m.noRef || m.id;
+    if (!grouped[ref]) {
+      grouped[ref] = {
+        id: m.id,
+        noProduksi: ref,
+        branchId: m.tujuanBranchId,
+        items: [],
+        tanggal: m.tanggal,
+        userId: m.userId,
+        userNama: m.userNama,
+        catatan: m.keterangan,
       };
     }
-    return r;
+    const brg = getBarangList().find(b => b.id === m.barangId || b.kodeBarang === m.kodeBarang);
+    grouped[ref].items.push({
+      barangId: m.barangId,
+      namaBarang: brg?.namaBarang || m.kodeBarang,
+      jumlah: m.jumlah,
+    });
   });
+
+  return Object.values(grouped);
 }
 
 export function addProduksiTransaction(data: {
@@ -614,42 +538,71 @@ export function addProduksiTransaction(data: {
   userNama: string;
   catatan?: string;
 }): TransaksiProduksi {
-  const list = getProduksiList();
   const noProduksi = `PRD-${Date.now().toString().slice(-6)}`;
-  const newTrx: TransaksiProduksi = {
-    id: `trx-prd-${Date.now()}`,
+  const nowIso = new Date().toISOString();
+
+  const mutasiEntries: TransaksiMutasiStok[] = data.items.map((it, idx) => {
+    const brg = getBarangList().find(b => b.id === it.barangId);
+    return {
+      id: `mut-${Date.now()}-${idx}`,
+      tanggal: nowIso,
+      jenisTransaksi: 'Produksi',
+      barangId: it.barangId,
+      kodeBarang: brg?.kodeBarang || it.barangId,
+      jumlah: it.jumlah,
+      sumberBranchId: '-',
+      tujuanBranchId: data.branchId,
+      status: 'Success',
+      userId: data.userId,
+      userNama: data.userNama,
+      noRef: noProduksi,
+      keterangan: data.catatan || 'Pencatatan Hasil Produksi',
+    };
+  });
+
+  addMutasiRecords(mutasiEntries);
+
+  return {
+    id: mutasiEntries[0].id,
     noProduksi,
     branchId: data.branchId,
     items: data.items,
-    tanggal: new Date().toISOString(),
+    tanggal: nowIso,
     userId: data.userId,
     userNama: data.userNama,
     catatan: data.catatan,
   };
-
-  list.unshift(newTrx);
-  saveToStorage(STORAGE_KEYS.PRODUKSI, list);
-
-  // Increase stock for each produced item
-  data.items.forEach(it => {
-    updateStok(data.branchId, it.barangId, it.jumlah);
-  });
-
-  return newTrx;
 }
 
-// Transfer (Mutasi 2-Step Handshake Multi-Item)
 export function getTransferList(): TransaksiTransfer[] {
-  const raw = getFromStorage<any[]>(STORAGE_KEYS.TRANSFER, []);
-  return raw.map(r => {
-    if (r.barangId && !r.items) {
-      return {
-        ...r,
-        items: [{ barangId: r.barangId, namaBarang: 'Produk', jumlah: r.jumlah, catatan: r.catatan }],
+  const mutasi = getMutasiList().filter(m => m.jenisTransaksi === 'Transfer');
+  const grouped: { [noRef: string]: TransaksiTransfer } = {};
+
+  mutasi.forEach(m => {
+    const ref = m.noRef || m.id;
+    if (!grouped[ref]) {
+      grouped[ref] = {
+        id: m.id,
+        noMutasi: ref,
+        branchAsalId: m.sumberBranchId,
+        branchTujuanId: m.tujuanBranchId,
+        items: [],
+        status: m.status === 'Success' ? ('On Hand' as any) : 'In Transit',
+        tanggalKirim: m.tanggal,
+        userPengirimId: m.userId,
+        userPengirimNama: m.userNama,
+        catatan: m.keterangan,
       };
     }
-    return r;
+    const brg = getBarangList().find(b => b.id === m.barangId || b.kodeBarang === m.kodeBarang);
+    grouped[ref].items.push({
+      barangId: m.barangId,
+      namaBarang: brg?.namaBarang || m.kodeBarang,
+      jumlah: m.jumlah,
+    });
   });
+
+  return Object.values(grouped);
 }
 
 export function addTransferShipment(data: {
@@ -660,7 +613,6 @@ export function addTransferShipment(data: {
   userPengirimNama: string;
   catatan?: string;
 }): { success: boolean; message: string; transfer?: TransaksiTransfer } {
-  // Validate stock for ALL items at origin branch
   for (const item of data.items) {
     const currentStok = getStokForBranchAndBarang(data.branchAsalId, item.barangId);
     if (currentStok < item.jumlah) {
@@ -671,68 +623,107 @@ export function addTransferShipment(data: {
     }
   }
 
-  // Deduct stock for all items from origin branch (put in transit)
-  data.items.forEach(item => {
-    updateStok(data.branchAsalId, item.barangId, -item.jumlah);
+  const noMutasi = `TRF-${Date.now().toString().slice(-6)}`;
+  const nowIso = new Date().toISOString();
+
+  const mutasiEntries: TransaksiMutasiStok[] = data.items.map((it, idx) => {
+    const brg = getBarangList().find(b => b.id === it.barangId);
+    return {
+      id: `mut-${Date.now()}-${idx}`,
+      tanggal: nowIso,
+      jenisTransaksi: 'Transfer',
+      barangId: it.barangId,
+      kodeBarang: brg?.kodeBarang || it.barangId,
+      jumlah: it.jumlah,
+      sumberBranchId: data.branchAsalId,
+      tujuanBranchId: data.branchTujuanId,
+      status: 'In Transit',
+      userId: data.userPengirimId,
+      userNama: data.userPengirimNama,
+      noRef: noMutasi,
+      keterangan: data.catatan || 'Pengiriman Mutasi Barang',
+    };
   });
 
-  const list = getTransferList();
-  const newTransfer: TransaksiTransfer = {
-    id: `trf-${Date.now()}`,
-    noMutasi: `TRF-${Date.now().toString().slice(-6)}`,
+  addMutasiRecords(mutasiEntries);
+
+  const transfer: TransaksiTransfer = {
+    id: mutasiEntries[0].id,
+    noMutasi,
     branchAsalId: data.branchAsalId,
     branchTujuanId: data.branchTujuanId,
     items: data.items,
     status: 'In Transit',
-    tanggalKirim: new Date().toISOString(),
+    tanggalKirim: nowIso,
     userPengirimId: data.userPengirimId,
     userPengirimNama: data.userPengirimNama,
     catatan: data.catatan,
   };
 
-  list.unshift(newTransfer);
-  saveToStorage(STORAGE_KEYS.TRANSFER, list);
-
   return {
     success: true,
     message: `Pengiriman ${data.items.length} jenis barang berhasil dicatat! Status: In Transit ke cabang tujuan.`,
-    transfer: newTransfer,
+    transfer,
   };
 }
 
 export function receiveTransfer(transferId: string, userPenerimaId: string, userPenerimaNama: string): { success: boolean; message: string } {
-  const list = getTransferList();
-  const trx = list.find(t => t.id === transferId);
+  const mutasiList = getMutasiList();
+  const targetRecords = mutasiList.filter(m => m.id === transferId || m.noRef === transferId);
 
-  if (!trx) {
+  if (targetRecords.length === 0) {
     return { success: false, message: 'Data mutasi tidak ditemukan.' };
   }
 
-  if (trx.status === 'On Hand') {
-    return { success: false, message: 'Mutasi barang ini sudah dikonfirmasi diterima sebelumnya.' };
-  }
+  const updatedRecords = targetRecords.map(m => ({
+    ...m,
+    status: 'Success' as const,
+    keterangan: `Diterima oleh ${userPenerimaNama} pada ${new Date().toLocaleDateString('id-ID')}`,
+  }));
 
-  trx.status = 'On Hand';
-  trx.tanggalTerima = new Date().toISOString();
-  trx.userPenerimaId = userPenerimaId;
-  trx.userPenerimaNama = userPenerimaNama;
-
-  saveToStorage(STORAGE_KEYS.TRANSFER, list);
-
-  // Add stock for all items to destination branch officially
-  trx.items.forEach(it => {
-    updateStok(trx.branchTujuanId, it.barangId, it.jumlah);
-  });
+  addMutasiRecords(updatedRecords);
 
   return {
     success: true,
-    message: `Seluruh (${trx.items.length}) item barang berhasil diterima! Stok resmi masuk ke cabang tujuan.`,
+    message: `Seluruh (${updatedRecords.length}) item barang berhasil diterima! Stok resmi masuk ke cabang tujuan.`,
   };
 }
 
-// Penjualan Transaction API
 export function getPenjualanList(): TransaksiPenjualan[] {
-  return getFromStorage<TransaksiPenjualan[]>(STORAGE_KEYS.PENJUALAN, []);
+  const mutasi = getMutasiList().filter(m => m.jenisTransaksi === 'Penjualan');
+  const grouped: { [noRef: string]: TransaksiPenjualan } = {};
+
+  mutasi.forEach(m => {
+    const ref = m.noRef || m.id;
+    if (!grouped[ref]) {
+      grouped[ref] = {
+        id: m.id,
+        noNota: ref,
+        branchId: m.sumberBranchId,
+        items: [],
+        totalBayar: 0,
+        pelanggan: 'Pelanggan Umum',
+        tanggal: m.tanggal,
+        userId: m.userId,
+        userNama: m.userNama,
+        catatan: m.keterangan,
+      };
+    }
+    const brg = getBarangList().find(b => b.id === m.barangId || b.kodeBarang === m.kodeBarang);
+    const harga = m.hargaSatuan || 0;
+    const subtotal = m.jumlah * harga;
+
+    grouped[ref].items.push({
+      barangId: m.barangId,
+      namaBarang: brg?.namaBarang || m.kodeBarang,
+      jumlah: m.jumlah,
+      hargaSatuan: harga,
+      subtotal,
+    });
+    grouped[ref].totalBayar += subtotal;
+  });
+
+  return Object.values(grouped);
 }
 
 export function addPenjualanTransaction(data: {
@@ -753,41 +744,58 @@ export function addPenjualanTransaction(data: {
     }
   }
 
-  const itemsWithSubtotal = data.items.map(it => {
-    updateStok(data.branchId, it.barangId, -it.jumlah);
+  const noNota = `INV-${Date.now().toString().slice(-6)}`;
+  const nowIso = new Date().toISOString();
+
+  const mutasiEntries: TransaksiMutasiStok[] = data.items.map((it, idx) => {
+    const brg = getBarangList().find(b => b.id === it.barangId);
     return {
-      ...it,
-      subtotal: it.jumlah * it.hargaSatuan,
+      id: `mut-${Date.now()}-${idx}`,
+      tanggal: nowIso,
+      jenisTransaksi: 'Penjualan',
+      barangId: it.barangId,
+      kodeBarang: brg?.kodeBarang || it.barangId,
+      jumlah: it.jumlah,
+      sumberBranchId: data.branchId,
+      tujuanBranchId: '-',
+      status: 'Success',
+      userId: data.userId,
+      userNama: data.userNama,
+      noRef: noNota,
+      hargaSatuan: it.hargaSatuan,
+      keterangan: data.catatan || `Penjualan Kasir (${data.pelanggan || 'Pelanggan Umum'})`,
     };
   });
 
+  addMutasiRecords(mutasiEntries);
+
+  const itemsWithSubtotal = data.items.map(it => ({
+    ...it,
+    subtotal: it.jumlah * it.hargaSatuan,
+  }));
   const totalBayar = itemsWithSubtotal.reduce((acc, curr) => acc + curr.subtotal, 0);
 
-  const list = getPenjualanList();
-  const newPenjualan: TransaksiPenjualan = {
-    id: `pj-${Date.now()}`,
-    noNota: `INV-${Date.now().toString().slice(-6)}`,
+  const penjualan: TransaksiPenjualan = {
+    id: mutasiEntries[0].id,
+    noNota,
     branchId: data.branchId,
     items: itemsWithSubtotal,
     totalBayar,
     pelanggan: data.pelanggan || 'Pelanggan Umum',
-    tanggal: new Date().toISOString(),
+    tanggal: nowIso,
     userId: data.userId,
     userNama: data.userNama,
     catatan: data.catatan,
   };
 
-  list.unshift(newPenjualan);
-  saveToStorage(STORAGE_KEYS.PENJUALAN, list);
-
   return {
     success: true,
-    message: 'Penjualan berhasil dicatat! Stok otomatis dipotong.',
-    penjualan: newPenjualan,
+    message: 'Penjualan berhasil dicatat! Mutasi stok penjualan resmi tercatat.',
+    penjualan,
   };
 }
 
-// Google Sheets Config API
+// Config & Bulk Import API
 export const HARDCODED_GOOGLE_SHEETS_URL =
   process.env.NEXT_PUBLIC_GOOGLE_SHEETS_URL ||
   'https://script.google.com/macros/s/AKfycbys7Z8kqSpB8YAlhHgbRT_ZxYFjxEmMj0XXhOfs3ab3eAJY3UdjHCc2eKvWwmzwRp4A/exec';
@@ -808,6 +816,7 @@ export function bulkImportStorageData(data: {
   branches?: Branch[];
   users?: User[];
   roles?: Role[];
+  mutasi?: TransaksiMutasiStok[];
   stok?: StokLokasi[];
   produksi?: TransaksiProduksi[];
   transfer?: TransaksiTransfer[];
@@ -828,17 +837,8 @@ export function bulkImportStorageData(data: {
     if (data.roles && Array.isArray(data.roles) && data.roles.length > 0) {
       saveToStorage(STORAGE_KEYS.ROLES, data.roles);
     }
-    if (data.stok && Array.isArray(data.stok)) {
-      saveToStorage(STORAGE_KEYS.STOK, data.stok);
-    }
-    if (data.produksi && Array.isArray(data.produksi)) {
-      saveToStorage(STORAGE_KEYS.PRODUKSI, data.produksi);
-    }
-    if (data.transfer && Array.isArray(data.transfer)) {
-      saveToStorage(STORAGE_KEYS.TRANSFER, data.transfer);
-    }
-    if (data.penjualan && Array.isArray(data.penjualan)) {
-      saveToStorage(STORAGE_KEYS.PENJUALAN, data.penjualan);
+    if (data.mutasi && Array.isArray(data.mutasi)) {
+      saveToStorage(STORAGE_KEYS.MUTASI, data.mutasi);
     }
   } finally {
     setImportingFlag(false);

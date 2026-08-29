@@ -60,6 +60,26 @@ export interface StokLokasi {
   jumlahStok: number;
 }
 
+// Single Ledger Mutasi Stok Model (Arus Mutasi Barang)
+export type JenisTransaksiMutasi = 'Produksi' | 'Transfer' | 'Penjualan';
+
+export interface TransaksiMutasiStok {
+  id: string;
+  tanggal: string; // Tanggal transaksi YYYY-MM-DD HH:mm:ss
+  jenisTransaksi: JenisTransaksiMutasi;
+  barangId: string;
+  kodeBarang: string;
+  jumlah: number;
+  sumberBranchId: string; // branchId atau '-'
+  tujuanBranchId: string; // branchId atau '-'
+  status: 'In Transit' | 'Success';
+  userId: string;
+  userNama: string;
+  noRef?: string; // No. Produksi, No. Mutasi, No. Nota
+  hargaSatuan?: number; // Untuk penjualan
+  keterangan?: string;
+}
+
 export interface ItemProduksi {
   barangId: string;
   namaBarang: string;

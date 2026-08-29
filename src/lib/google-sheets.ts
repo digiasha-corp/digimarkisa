@@ -4,10 +4,7 @@ import {
   getBranchList,
   getUserList,
   getRoleList,
-  getStokLokasiList,
-  getProduksiList,
-  getTransferList,
-  getPenjualanList,
+  getMutasiList,
   bulkImportStorageData,
 } from './storage';
 
@@ -53,10 +50,7 @@ export async function syncToGoogleSheets(): Promise<{ success: boolean; message:
       branches: getBranchList(),
       users: getUserList(),
       roles: getRoleList(),
-      stok: getStokLokasiList(),
-      produksi: getProduksiList(),
-      transfer: getTransferList(),
-      penjualan: getPenjualanList(),
+      mutasi: getMutasiList(),
     },
   };
 
@@ -90,14 +84,7 @@ export function triggerAutoSyncIfNeeded(): void {
 
 export function generateGoogleAppsScriptCode(): string {
   return `/**
- * Google Apps Script Web App Backend untuk Aplikasi Mobile Stok Sirup Markisa (2-Way Realtime Backend)
- * Petunjuk Pemasangan:
- * 1. Buka Google Spreadsheet di https://sheets.new
- * 2. Klik Ekstensi -> Apps Script
- * 3. Hapus kode bawaan dan Tempelkan seluruh kode ini.
- * 4. Klik "Deploy" -> "New deployment" -> Select type: "Web app"
- * 5. Execute as: "Me" | Who has access: "Anyone"
- * 6. Klik Deploy, Berikan Izin Access, lalu Salin Web App URL dan masukkan di Pengaturan Aplikasi.
+ * Google Apps Script Web App Backend untuk Aplikasi Mobile Stok Sirup Markisa (Single Ledger Mutasi Backend)
  */
 
 function doGet(e) {
@@ -120,10 +107,7 @@ function doPost(e) {
       writeSheetData(ss, 'Master_Branch', data.branches, ['id', 'kodeBranch', 'namaBranch', 'tipe', 'alamat', 'isAktif']);
       writeSheetData(ss, 'Users', data.users, ['id', 'nama', 'username', 'pin', 'roleId', 'assignedBranchIds', 'isAktif']);
       writeSheetData(ss, 'Roles', data.roles, ['id', 'namaRole', 'deskripsi', 'permissions']);
-      writeSheetData(ss, 'Stok_Lokasi', data.stok, ['branchId', 'barangId', 'jumlahStok']);
-      writeSheetData(ss, 'Riwayat_Produksi', data.produksi, ['id', 'noProduksi', 'branchId', 'items', 'tanggal', 'userId', 'userNama']);
-      writeSheetData(ss, 'Riwayat_Transfer', data.transfer, ['id', 'noMutasi', 'branchAsalId', 'branchTujuanId', 'items', 'status', 'tanggalKirim', 'userPengirimId', 'userPengirimNama', 'tanggalTerima', 'userPenerimaId', 'userPenerimaNama']);
-      writeSheetData(ss, 'Riwayat_Penjualan', data.penjualan, ['id', 'noNota', 'branchId', 'items', 'totalBayar', 'pelanggan', 'tanggal', 'userId', 'userNama']);
+      writeSheetData(ss, 'Mutasi_Stok', data.mutasi, ['id', 'tanggal', 'jenisTransaksi', 'kodeBarang', 'jumlah', 'sumberBranchId', 'tujuanBranchId', 'status', 'userId', 'userNama', 'noRef', 'hargaSatuan', 'keterangan']);
 
       return ContentService.createTextOutput(JSON.stringify({
         success: true,
@@ -147,10 +131,7 @@ function handleGetAll() {
   var branches = readSheetData(ss, 'Master_Branch');
   var users = readSheetData(ss, 'Users');
   var roles = readSheetData(ss, 'Roles');
-  var stok = readSheetData(ss, 'Stok_Lokasi');
-  var produksi = readSheetData(ss, 'Riwayat_Produksi');
-  var transfer = readSheetData(ss, 'Riwayat_Transfer');
-  var penjualan = readSheetData(ss, 'Riwayat_Penjualan');
+  var mutasi = readSheetData(ss, 'Mutasi_Stok');
 
   return ContentService.createTextOutput(JSON.stringify({
     success: true,
@@ -160,10 +141,7 @@ function handleGetAll() {
       branches: branches,
       users: users,
       roles: roles,
-      stok: stok,
-      produksi: produksi,
-      transfer: transfer,
-      penjualan: penjualan
+      mutasi: mutasi
     }
   })).setMimeType(ContentService.MimeType.JSON);
 }
