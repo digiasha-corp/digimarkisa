@@ -75,7 +75,7 @@ export default function Header() {
             title="Ganti Akun"
           >
             <UserCheck className="w-3.5 h-3.5 text-amber-400" />
-            <span className="truncate max-w-[100px]">{auth.user.nama.split(' ')[0]}</span>
+            <span className="truncate max-w-[100px]">{auth.user?.nama ? auth.user.nama.split(' ')[0] : 'User'}</span>
           </Link>
 
           <button

@@ -84,7 +84,7 @@ export default function DashboardPage() {
               {auth.role?.namaRole || 'User'}
             </span>
             <h2 className="text-lg font-black tracking-tight mt-1">
-              Halo, {auth.user?.nama.split(' ')[0]} 👋
+              Halo, {auth.user?.nama ? auth.user.nama.split(' ')[0] : 'User'} 👋
             </h2>
             <p className="text-amber-100 text-xs mt-0.5">Monitoring Stok Sirup Markisa Real-time</p>
           </div>
