@@ -1,5 +1,5 @@
 import { User, Role, Branch, RolePermissions } from './types';
-import { getActiveUser, getRoleList, getBranchList, getUserList, setActiveUser as persistActiveUser } from './storage';
+import { getActiveUser, getRoleList, getBranchList, getUserList, setActiveUser as persistActiveUser, logoutUser as storageLogoutUser } from './storage';
 
 export interface AuthState {
   user: User | null;
@@ -13,13 +13,17 @@ export function getCurrentAuth(): AuthState {
   }
 
   const user = getActiveUser();
+  if (!user || !user.isAktif) {
+    return { user: null, role: null, allowedBranches: [] };
+  }
+
   const roles = getRoleList();
   const branches = getBranchList();
 
-  const role = roles.find(r => r.id === user.roleId) || roles[0];
+  const role = roles.find(r => r.id === user.roleId) || null;
 
   let allowedBranches: Branch[] = [];
-  if (user.assignedBranchIds === 'ALL' || role.permissions.canViewAllBranches) {
+  if (user.assignedBranchIds === 'ALL' || (role && role.permissions.canViewAllBranches)) {
     allowedBranches = branches.filter(b => b.isAktif);
   } else if (Array.isArray(user.assignedBranchIds)) {
     allowedBranches = branches.filter(b => b.isAktif && user.assignedBranchIds.includes(b.id));
@@ -51,4 +55,8 @@ export function switchUserAccount(userId: string): { success: boolean; user?: Us
     return { success: true, user: u };
   }
   return { success: false };
+}
+
+export function logout(): void {
+  storageLogoutUser();
 }

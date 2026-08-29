@@ -307,9 +307,6 @@ export function initializeStorageIfNeeded(): void {
   if (!localStorage.getItem(STORAGE_KEYS.STOK)) {
     saveToStorage(STORAGE_KEYS.STOK, INITIAL_STOK);
   }
-  if (!localStorage.getItem(STORAGE_KEYS.CURRENT_USER)) {
-    saveToStorage(STORAGE_KEYS.CURRENT_USER, INITIAL_USERS[0]);
-  }
 }
 
 // Product Management API
@@ -510,12 +507,25 @@ export function deleteUser(userId: string): { success: boolean; message: string 
 }
 
 
-export function getActiveUser(): User {
-  return getFromStorage<User>(STORAGE_KEYS.CURRENT_USER, INITIAL_USERS[0]);
+export function getActiveUser(): User | null {
+  if (typeof window === 'undefined') return null;
+  const raw = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
 }
 
 export function setActiveUser(user: User): void {
   saveToStorage(STORAGE_KEYS.CURRENT_USER, user);
+}
+
+export function logoutUser(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+  window.dispatchEvent(new Event('userSwitched'));
 }
 
 // Stock & Inventory Calculations

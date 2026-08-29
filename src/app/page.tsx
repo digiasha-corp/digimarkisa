@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { getBarangList, getBranchList, getStokLokasiList, getTransferList, initializeStorageIfNeeded } from '@/lib/storage';
 import { getCurrentAuth } from '@/lib/auth-store';
 import { Barang, Branch, StokLokasi, TransaksiTransfer } from '@/lib/types';
@@ -18,9 +19,16 @@ export default function DashboardPage() {
   const [selectedBranchId, setSelectedBranchId] = useState<string>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
 
+  const router = useRouter();
+
   const loadData = () => {
     initializeStorageIfNeeded();
-    setAuth(getCurrentAuth());
+    const current = getCurrentAuth();
+    if (!current.user) {
+      router.push('/login');
+      return;
+    }
+    setAuth(current);
     setBarangList(getBarangList().filter(b => b.isAktif));
     setBranches(getBranchList().filter(b => b.isAktif));
     setStokList(getStokLokasiList());
@@ -28,6 +36,11 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
+    const current = getCurrentAuth();
+    if (!current.user) {
+      router.push('/login');
+      return;
+    }
     loadData();
     const handleStorage = () => loadData();
     window.addEventListener('storage', handleStorage);
@@ -36,7 +49,7 @@ export default function DashboardPage() {
       window.removeEventListener('storage', handleStorage);
       window.removeEventListener('userSwitched', handleStorage);
     };
-  }, []);
+  }, [router]);
 
   // Filter allowed branches for current user
   const visibleBranches = auth.user?.assignedBranchIds === 'ALL' || auth.role?.permissions.canViewAllBranches
