@@ -364,7 +364,7 @@ export default function DashboardPage() {
                       <td className="px-3 py-3 font-bold text-slate-900">{brg.namaBarang}</td>
                       <td className="px-3 py-3 text-right">
                         <span className="font-black text-xs text-amber-800 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200">
-                          {totalStokBarang.toLocaleString('id-ID')} {brg.satuanUkuran}
+                          {totalStokBarang.toLocaleString('id-ID')} Pcs
                         </span>
                       </td>
                     </tr>
@@ -425,7 +425,7 @@ export default function DashboardPage() {
                       </td>
                       <td className="px-3 py-3 text-right">
                         <span className="font-black text-xs text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200">
-                          {totalQtyProduksi.toLocaleString('id-ID')} {brg.satuanUkuran}
+                          {totalQtyProduksi.toLocaleString('id-ID')} Pcs
                         </span>
                       </td>
                     </tr>
@@ -480,7 +480,7 @@ export default function DashboardPage() {
                       <td className="px-3 py-3 text-center font-bold text-slate-500">{index + 1}</td>
                       <td className="px-3 py-3 font-bold text-slate-900">{brg.namaBarang}</td>
                       <td className="px-3 py-3 text-center font-bold">
-                        {totalQtyTerjual.toLocaleString('id-ID')} {brg.satuanUkuran}
+                        {totalQtyTerjual.toLocaleString('id-ID')} Pcs
                       </td>
                       <td className="px-3 py-3 text-right">
                         <span className="font-black text-xs text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
@@ -551,7 +551,7 @@ export default function DashboardPage() {
                               const brg = barangList.find(b => b.id === item.barangId);
                               return (
                                 <span key={idx} className="px-1.5 py-0.5 bg-purple-50 border border-purple-200 rounded text-[11px]">
-                                  {brg?.namaBarang || item.barangId}: <b>{item.jumlah} {brg?.satuanUkuran || 'unit'}</b>
+                                  {brg?.namaBarang || item.barangId}: <b>{item.jumlah} Pcs</b>
                                 </span>
                               );
                             })}
