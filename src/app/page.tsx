@@ -112,26 +112,10 @@ export default function DashboardPage() {
 
   // Date Filtering Function
   const isDateInFilter = (dateStr: string) => {
-    if (datePreset === 'SEMUA') return true;
+    if (!startDate && !endDate) return true;
     const txDate = new Date(dateStr);
-    const now = new Date();
-
-    if (datePreset === 'HARI_INI') {
-      return txDate.toDateString() === now.toDateString();
-    }
-    if (datePreset === '7_HARI') {
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(now.getDate() - 7);
-      return txDate >= sevenDaysAgo;
-    }
-    if (datePreset === 'BULAN_INI') {
-      return txDate.getMonth() === now.getMonth() && txDate.getFullYear() === now.getFullYear();
-    }
-    if (datePreset === 'CUSTOM') {
-      if (startDate && new Date(dateStr) < new Date(startDate)) return false;
-      if (endDate && new Date(dateStr) > new Date(endDate + 'T23:59:59')) return false;
-      return true;
-    }
+    if (startDate && txDate < new Date(startDate)) return false;
+    if (endDate && txDate > new Date(endDate + 'T23:59:59')) return false;
     return true;
   };
 
@@ -275,55 +259,42 @@ export default function DashboardPage() {
         <div className="pt-2 border-t border-slate-100 space-y-2">
           <div className="flex items-center justify-between">
             <label className="text-xs font-black text-slate-800 flex items-center gap-1.5 uppercase tracking-wider">
-              <Calendar className="w-4 h-4 text-blue-600" /> Filter Range Tanggal (Produksi & Penjualan)
+              <Calendar className="w-4 h-4 text-blue-600" /> Filter Tanggal (Custom Range)
             </label>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-1.5">
-            {[
-              { id: 'SEMUA', label: 'Semua Waktu' },
-              { id: 'HARI_INI', label: 'Hari Ini' },
-              { id: '7_HARI', label: '7 Hari Terakhir' },
-              { id: 'BULAN_INI', label: 'Bulan Ini' },
-              { id: 'CUSTOM', label: 'Custom Tanggal' },
-            ].map(p => (
+            {(startDate || endDate) && (
               <button
-                key={p.id}
                 type="button"
-                onClick={() => setDatePreset(p.id as any)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  datePreset === p.id
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                }`}
+                onClick={() => {
+                  setStartDate('');
+                  setEndDate('');
+                }}
+                className="text-[11px] font-extrabold text-blue-700 hover:underline"
               >
-                {p.label}
+                Reset Tanggal
               </button>
-            ))}
+            )}
           </div>
 
-          {datePreset === 'CUSTOM' && (
-            <div className="grid grid-cols-2 gap-2 pt-2">
-              <div>
-                <label className="block text-[10px] font-bold text-slate-600 mb-1">Tanggal Mulai</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={e => setStartDate(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold text-slate-600 mb-1">Tanggal Selesai</label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={e => setEndDate(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800"
-                />
-              </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-[10px] font-bold text-slate-600 mb-1">Tanggal Mulai</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={e => setStartDate(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
-          )}
+            <div>
+              <label className="block text-[10px] font-bold text-slate-600 mb-1">Tanggal Selesai</label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={e => setEndDate(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
