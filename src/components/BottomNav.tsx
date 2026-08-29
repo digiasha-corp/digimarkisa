@@ -29,7 +29,7 @@ export default function BottomNav() {
   const navItems = [
     {
       href: '/',
-      label: 'Stok',
+      label: 'Dashboard',
       icon: LayoutDashboard,
       show: true,
     },
