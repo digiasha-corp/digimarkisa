@@ -750,18 +750,22 @@ export function addPenjualanTransaction(data: {
 }
 
 // Google Sheets Config API
-export const DEFAULT_GOOGLE_SHEETS_URL = process.env.NEXT_PUBLIC_GOOGLE_SHEETS_URL || '';
+export const HARDCODED_GOOGLE_SHEETS_URL =
+  process.env.NEXT_PUBLIC_GOOGLE_SHEETS_URL ||
+  'https://script.google.com/macros/s/AKfycbys7Z8kqSpB8YA1hHgbRT_ZxYFj/exec';
 
 export function getGoogleSheetsConfig(): GoogleSheetsConfig {
   const stored = getFromStorage<GoogleSheetsConfig>(STORAGE_KEYS.GOOGLE_SHEETS, {
-    webAppUrl: DEFAULT_GOOGLE_SHEETS_URL,
+    webAppUrl: HARDCODED_GOOGLE_SHEETS_URL,
     autoSync: true,
   });
 
-  if (!stored.webAppUrl && DEFAULT_GOOGLE_SHEETS_URL) {
-    stored.webAppUrl = DEFAULT_GOOGLE_SHEETS_URL;
-  }
-  return stored;
+  const finalUrl = stored.webAppUrl || HARDCODED_GOOGLE_SHEETS_URL;
+
+  return {
+    webAppUrl: finalUrl,
+    autoSync: stored.autoSync ?? true,
+  };
 }
 
 export function saveGoogleSheetsConfig(config: GoogleSheetsConfig): void {
