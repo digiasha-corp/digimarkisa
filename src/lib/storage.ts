@@ -176,8 +176,8 @@ export const INITIAL_BARANG: Barang[] = [
 export const INITIAL_USERS: User[] = [
   {
     id: 'user-admin',
-    nama: 'Budi Santoso (Owner)',
-    username: 'admin',
+    nama: 'Pradipta Evan (Superadmin)',
+    username: 'Pradipta evan',
     pin: '1234',
     roleId: 'role-admin',
     assignedBranchIds: 'ALL',
@@ -301,7 +301,8 @@ export function initializeStorageIfNeeded(): void {
   if (!localStorage.getItem(STORAGE_KEYS.ROLES)) {
     saveToStorage(STORAGE_KEYS.ROLES, INITIAL_ROLES);
   }
-  if (!localStorage.getItem(STORAGE_KEYS.USERS)) {
+  const rawUsers = localStorage.getItem(STORAGE_KEYS.USERS);
+  if (!rawUsers || rawUsers.includes('Budi Santoso')) {
     saveToStorage(STORAGE_KEYS.USERS, INITIAL_USERS);
   }
   if (!localStorage.getItem(STORAGE_KEYS.STOK)) {
