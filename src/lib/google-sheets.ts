@@ -119,7 +119,7 @@ function doPost(e) {
       writeSheetData(ss, 'Master_Barang', data.barang, ['id', 'kodeBarang', 'namaBarang', 'nilaiUkuran', 'satuanUkuran', 'keterangan', 'isAktif']);
       writeSheetData(ss, 'Master_Branch', data.branches, ['id', 'kodeBranch', 'namaBranch', 'tipe', 'alamat', 'isAktif']);
       writeSheetData(ss, 'Users', data.users, ['id', 'nama', 'username', 'pin', 'roleId', 'assignedBranchIds', 'isAktif']);
-      writeSheetData(ss, 'Roles', data.roles, ['id', 'namaRole', 'deskripsi']);
+      writeSheetData(ss, 'Roles', data.roles, ['id', 'namaRole', 'deskripsi', 'permissions']);
       writeSheetData(ss, 'Stok_Lokasi', data.stok, ['branchId', 'barangId', 'jumlahStok']);
       writeSheetData(ss, 'Riwayat_Produksi', data.produksi, ['id', 'noProduksi', 'branchId', 'items', 'tanggal', 'userId', 'userNama']);
       writeSheetData(ss, 'Riwayat_Transfer', data.transfer, ['id', 'noMutasi', 'branchAsalId', 'branchTujuanId', 'items', 'status', 'tanggalKirim', 'userPengirimId', 'userPengirimNama', 'tanggalTerima', 'userPenerimaId', 'userPenerimaNama']);

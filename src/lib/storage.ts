@@ -402,7 +402,39 @@ export function toggleBranchStatus(branchId: string): void {
 
 // Roles & User Management API
 export function getRoleList(): Role[] {
-  return getFromStorage<Role[]>(STORAGE_KEYS.ROLES, INITIAL_ROLES);
+  const rawRoles = getFromStorage<Role[]>(STORAGE_KEYS.ROLES, INITIAL_ROLES);
+  return rawRoles.map(r => {
+    let permissions = r.permissions;
+    if (typeof permissions === 'string') {
+      try { permissions = JSON.parse(permissions); } catch (e) {}
+    }
+    if (!permissions || typeof permissions !== 'object') {
+      permissions = r.id === 'role-admin'
+        ? {
+            canManageProducts: true,
+            canManageBranches: true,
+            canManageUsers: true,
+            canAddProduction: true,
+            canTransferStock: true,
+            canReceiveStock: true,
+            canRecordSale: true,
+            canViewAllBranches: true,
+            canManageSettings: true,
+          }
+        : {
+            canManageProducts: true,
+            canManageBranches: false,
+            canManageUsers: false,
+            canAddProduction: true,
+            canTransferStock: true,
+            canReceiveStock: true,
+            canRecordSale: true,
+            canViewAllBranches: false,
+            canManageSettings: false,
+          };
+    }
+    return { ...r, permissions };
+  });
 }
 
 export function saveRole(role: Role): void {

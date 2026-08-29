@@ -7,6 +7,47 @@ export interface AuthState {
   allowedBranches: Branch[];
 }
 
+export const ADMIN_ROLE_PERMISSIONS: RolePermissions = {
+  canManageProducts: true,
+  canManageBranches: true,
+  canManageUsers: true,
+  canAddProduction: true,
+  canTransferStock: true,
+  canReceiveStock: true,
+  canRecordSale: true,
+  canViewAllBranches: true,
+  canManageSettings: true,
+};
+
+export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
+  canManageProducts: true,
+  canManageBranches: false,
+  canManageUsers: false,
+  canAddProduction: true,
+  canTransferStock: true,
+  canReceiveStock: true,
+  canRecordSale: true,
+  canViewAllBranches: false,
+  canManageSettings: false,
+};
+
+export function ensureRolePermissions(role: Role | null): Role | null {
+  if (!role) return null;
+  let permissions = role.permissions;
+  if (typeof permissions === 'string') {
+    try {
+      permissions = JSON.parse(permissions);
+    } catch (e) {}
+  }
+  if (!permissions || typeof permissions !== 'object') {
+    permissions = role.id === 'role-admin' ? { ...ADMIN_ROLE_PERMISSIONS } : { ...DEFAULT_ROLE_PERMISSIONS };
+  }
+  return {
+    ...role,
+    permissions,
+  };
+}
+
 export function getCurrentAuth(): AuthState {
   if (typeof window === 'undefined') {
     return { user: null, role: null, allowedBranches: [] };
@@ -17,13 +58,16 @@ export function getCurrentAuth(): AuthState {
     return { user: null, role: null, allowedBranches: [] };
   }
 
-  const roles = getRoleList();
+  const rawRoles = getRoleList();
   const branches = getBranchList();
 
-  const role = roles.find(r => r.id === user.roleId) || null;
+  const foundRole = rawRoles.find(r => r.id === user.roleId) || null;
+  const role = ensureRolePermissions(foundRole);
 
   let allowedBranches: Branch[] = [];
-  if (user.assignedBranchIds === 'ALL' || (role && role.permissions.canViewAllBranches)) {
+  const canViewAll = Boolean(role?.permissions?.canViewAllBranches);
+
+  if (user.assignedBranchIds === 'ALL' || canViewAll) {
     allowedBranches = branches.filter(b => b.isAktif);
   } else if (Array.isArray(user.assignedBranchIds)) {
     allowedBranches = branches.filter(b => b.isAktif && user.assignedBranchIds.includes(b.id));
@@ -38,7 +82,7 @@ export function getCurrentAuth(): AuthState {
 
 export function hasPermission(permissionKey: keyof RolePermissions): boolean {
   const { role } = getCurrentAuth();
-  if (!role) return false;
+  if (!role || !role.permissions) return false;
   return Boolean(role.permissions[permissionKey]);
 }
 
