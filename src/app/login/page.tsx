@@ -32,6 +32,7 @@ export default function LoginPage() {
     setErrorMsg('');
 
     const cleanUsername = usernameInput.trim().toLowerCase().replace(/^@/, '');
+    const cleanNoSpace = cleanUsername.replace(/\s+/g, '');
     if (!cleanUsername) {
       setErrorMsg('Silakan masukkan Username / ID Pengguna Anda.');
       return;
@@ -43,12 +44,21 @@ export default function LoginPage() {
 
     const allUsers = getUserList().filter(u => u.isAktif);
     
-    // Search by username, id, or full name (case insensitive)
+    // Search by username, id, or full name (case insensitive & space insensitive)
     const targetUser = allUsers.find(u => {
-      const uName = u.username.toLowerCase().replace(/^@/, '');
-      const uNama = u.nama.toLowerCase();
-      const uId = u.id.toLowerCase();
-      return uName === cleanUsername || uNama === cleanUsername || uId === cleanUsername;
+      const uName = String(u.username || '').trim().toLowerCase().replace(/^@/, '');
+      const uNameNoSpace = uName.replace(/\s+/g, '');
+      const uNama = String(u.nama || '').trim().toLowerCase();
+      const uNamaNoSpace = uNama.replace(/\s+/g, '');
+      const uId = String(u.id || '').trim().toLowerCase();
+
+      return (
+        uName === cleanUsername ||
+        uNameNoSpace === cleanNoSpace ||
+        uNama === cleanUsername ||
+        uNamaNoSpace === cleanNoSpace ||
+        uId === cleanUsername
+      );
     });
 
     if (!targetUser) {
@@ -56,19 +66,21 @@ export default function LoginPage() {
       return;
     }
 
+    const userPin = String(targetUser.pin ?? '').trim();
+    const inputPin = String(pinInput ?? '').trim();
+
     // Check if user has empty PIN or default PIN
-    const isDefaultOrEmptyPin = !targetUser.pin || targetUser.pin === '1234' || targetUser.pin === '1111' || targetUser.pin === '2222' || targetUser.pin === '3333';
+    const isDefaultOrEmptyPin = !userPin || userPin === '1234' || userPin === '1111' || userPin === '2222' || userPin === '3333';
 
     if (isDefaultOrEmptyPin) {
-      // If PIN is default/empty, verify if they entered blank or default PIN to trigger forced change
-      if (!pinInput || pinInput === targetUser.pin || targetUser.pin === '1234') {
+      if (!inputPin || inputPin === userPin || userPin === '1234') {
         setPendingUser(targetUser);
         setErrorMsg('');
         return;
       }
     }
 
-    if (targetUser.pin && targetUser.pin !== pinInput) {
+    if (userPin && userPin !== inputPin) {
       setErrorMsg('Username atau PIN yang Anda masukkan salah.');
       return;
     }

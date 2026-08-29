@@ -186,6 +186,9 @@ function readSheetData(ss, sheetName) {
       if (val !== '' && val !== null && val !== undefined) {
         hasValue = true;
       }
+      if (typeof val === 'number') {
+        val = String(val);
+      }
       if (typeof val === 'string' && (val.startsWith('{') || val.startsWith('['))) {
         try {
           val = JSON.parse(val);
