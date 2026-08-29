@@ -24,13 +24,10 @@ import {
   Clock,
   ArrowUpRight,
   Calendar,
-  Filter,
   CheckSquare,
   Square,
-  TrendingUp,
-  PackageCheck,
   Truck,
-  RotateCcw,
+  PackageCheck,
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -331,7 +328,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ========================================================================= */}
-      {/* 1. TABEL LAPORAN STOK */}
+      {/* 1. TABEL LAPORAN STOK (STANDARD HTML TABLE) */}
       {/* ========================================================================= */}
       {(activeReportSection === 'ALL' || activeReportSection === 'STOK') && (
         <div className="glass-card rounded-2xl p-4 space-y-3 border-2 border-amber-300">
@@ -344,58 +341,66 @@ export default function DashboardPage() {
             </span>
           </div>
 
-          <div className="space-y-2.5">
-            {barangList.map(brg => {
-              const targetBranches = visibleBranches.filter(b => selectedBranchIds.includes(b.id));
-              const branchStoks = targetBranches.map(branch => {
-                const stokItem = stokList.find(s => s.branchId === branch.id && s.barangId === brg.id);
-                return {
-                  branch,
-                  stok: stokItem ? stokItem.jumlahStok : 0,
-                };
-              });
+          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+            <table className="w-full text-xs text-left text-slate-700">
+              <thead className="bg-slate-100 text-slate-800 font-extrabold uppercase tracking-wider border-b border-slate-200">
+                <tr>
+                  <th className="px-3 py-2.5 text-center w-10">No</th>
+                  <th className="px-3 py-2.5">Kode & Nama Barang</th>
+                  <th className="px-3 py-2.5">Detail Stok per Cabang</th>
+                  <th className="px-3 py-2.5 text-right">Total Stok</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {barangList.map((brg, index) => {
+                  const targetBranches = visibleBranches.filter(b => selectedBranchIds.includes(b.id));
+                  const branchStoks = targetBranches.map(branch => {
+                    const stokItem = stokList.find(s => s.branchId === branch.id && s.barangId === brg.id);
+                    return {
+                      branch,
+                      stok: stokItem ? stokItem.jumlahStok : 0,
+                    };
+                  });
 
-              const totalStokBarang = branchStoks.reduce((sum, item) => sum + item.stok, 0);
+                  const totalStokBarang = branchStoks.reduce((sum, item) => sum + item.stok, 0);
 
-              return (
-                <div key={brg.id} className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 bg-amber-100 text-amber-800 rounded">
-                        {brg.kodeBarang}
-                      </span>
-                      <h4 className="font-bold text-slate-900 text-xs mt-1">{brg.namaBarang}</h4>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-amber-500 text-white shadow-sm">
-                        Total: {totalStokBarang.toLocaleString('id-ID')} {brg.satuanUkuran}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Breakdown per Cabang */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1 border-t border-slate-200/60">
-                    {branchStoks.map(({ branch, stok }) => (
-                      <div
-                        key={branch.id}
-                        className="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs flex items-center justify-between"
-                      >
-                        <span className="font-medium text-slate-700 truncate max-w-[170px]">{branch.namaBranch}</span>
-                        <span className="font-extrabold text-slate-900 ml-2">
-                          {stok.toLocaleString('id-ID')} {brg.satuanUkuran}
+                  return (
+                    <tr key={brg.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-3 py-3 text-center font-bold text-slate-500">{index + 1}</td>
+                      <td className="px-3 py-3">
+                        <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded">
+                          {brg.kodeBarang}
                         </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
+                        <div className="font-bold text-slate-900 text-xs mt-0.5">{brg.namaBarang}</div>
+                      </td>
+                      <td className="px-3 py-3">
+                        <div className="flex flex-wrap gap-1">
+                          {branchStoks.map(({ branch, stok }) => (
+                            <span
+                              key={branch.id}
+                              className="px-2 py-0.5 bg-slate-50 border border-slate-200 rounded text-[11px] font-medium"
+                            >
+                              {branch.namaBranch}: <b>{stok.toLocaleString('id-ID')} {brg.satuanUkuran}</b>
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        <span className="font-black text-xs text-amber-700 bg-amber-50 px-2 py-1 rounded-lg border border-amber-200">
+                          {totalStokBarang.toLocaleString('id-ID')} {brg.satuanUkuran}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* 2. TABEL LAPORAN PRODUKSI */}
+      {/* 2. TABEL LAPORAN PRODUKSI (STANDARD HTML TABLE) */}
       {/* ========================================================================= */}
       {(activeReportSection === 'ALL' || activeReportSection === 'PRODUKSI') && (
         <div className="glass-card rounded-2xl p-4 space-y-3 border-2 border-blue-300">
@@ -408,46 +413,55 @@ export default function DashboardPage() {
             </span>
           </div>
 
-          <div className="space-y-2.5">
-            {barangList.map(brg => {
-              // Aggregate total production for this barang in filteredProduksi
-              let totalQtyProduksi = 0;
-              let batchCount = 0;
+          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+            <table className="w-full text-xs text-left text-slate-700">
+              <thead className="bg-blue-50 text-blue-950 font-extrabold uppercase tracking-wider border-b border-blue-200">
+                <tr>
+                  <th className="px-3 py-2.5 text-center w-10">No</th>
+                  <th className="px-3 py-2.5">Nama Barang</th>
+                  <th className="px-3 py-2.5 text-center">Jumlah Batch</th>
+                  <th className="px-3 py-2.5 text-right">Total Unit Diproduksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {barangList.map((brg, index) => {
+                  let totalQtyProduksi = 0;
+                  let batchCount = 0;
 
-              filteredProduksi.forEach(p => {
-                let foundInBatch = false;
-                p.items.forEach(item => {
-                  if (item.barangId === brg.id) {
-                    totalQtyProduksi += item.jumlah;
-                    foundInBatch = true;
-                  }
-                });
-                if (foundInBatch) batchCount++;
-              });
+                  filteredProduksi.forEach(p => {
+                    let foundInBatch = false;
+                    p.items.forEach(item => {
+                      if (item.barangId === brg.id) {
+                        totalQtyProduksi += item.jumlah;
+                        foundInBatch = true;
+                      }
+                    });
+                    if (foundInBatch) batchCount++;
+                  });
 
-              return (
-                <div key={brg.id} className="p-3 bg-blue-50/50 border border-blue-200 rounded-xl flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 bg-blue-100 text-blue-800 rounded">
-                      {brg.kodeBarang}
-                    </span>
-                    <h4 className="font-bold text-slate-900 text-xs mt-1">{brg.namaBarang}</h4>
-                    <p className="text-[11px] text-slate-500 mt-0.5 font-medium">{batchCount} Batch Produksi Dicatat</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-blue-600 text-white shadow-sm">
-                      {totalQtyProduksi.toLocaleString('id-ID')} {brg.satuanUkuran}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+                  return (
+                    <tr key={brg.id} className="hover:bg-blue-50/40 transition-colors">
+                      <td className="px-3 py-3 text-center font-bold text-slate-500">{index + 1}</td>
+                      <td className="px-3 py-3 font-bold text-slate-900">{brg.namaBarang}</td>
+                      <td className="px-3 py-3 text-center">
+                        <span className="px-2 py-0.5 bg-slate-100 rounded text-slate-700 font-bold">{batchCount} Batch</span>
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        <span className="font-black text-xs text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200">
+                          {totalQtyProduksi.toLocaleString('id-ID')} {brg.satuanUkuran}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* 3. TABEL LAPORAN PENJUALAN */}
+      {/* 3. TABEL LAPORAN PENJUALAN (STANDARD HTML TABLE) */}
       {/* ========================================================================= */}
       {(activeReportSection === 'ALL' || activeReportSection === 'PENJUALAN') && (
         <div className="glass-card rounded-2xl p-4 space-y-3 border-2 border-emerald-300">
@@ -460,45 +474,53 @@ export default function DashboardPage() {
             </span>
           </div>
 
-          <div className="space-y-2.5">
-            {barangList.map(brg => {
-              let totalQtyTerjual = 0;
-              let totalOmsetBarang = 0;
+          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+            <table className="w-full text-xs text-left text-slate-700">
+              <thead className="bg-emerald-50 text-emerald-950 font-extrabold uppercase tracking-wider border-b border-emerald-200">
+                <tr>
+                  <th className="px-3 py-2.5 text-center w-10">No</th>
+                  <th className="px-3 py-2.5">Nama Barang</th>
+                  <th className="px-3 py-2.5 text-center">Qty Terjual</th>
+                  <th className="px-3 py-2.5 text-right">Total Omset (Rp)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {barangList.map((brg, index) => {
+                  let totalQtyTerjual = 0;
+                  let totalOmsetBarang = 0;
 
-              filteredPenjualan.forEach(pj => {
-                pj.items.forEach(item => {
-                  if (item.barangId === brg.id) {
-                    totalQtyTerjual += item.jumlah;
-                    totalOmsetBarang += item.jumlah * item.hargaSatuan;
-                  }
-                });
-              });
+                  filteredPenjualan.forEach(pj => {
+                    pj.items.forEach(item => {
+                      if (item.barangId === brg.id) {
+                        totalQtyTerjual += item.jumlah;
+                        totalOmsetBarang += item.jumlah * item.hargaSatuan;
+                      }
+                    });
+                  });
 
-              return (
-                <div key={brg.id} className="p-3 bg-emerald-50/50 border border-emerald-200 rounded-xl flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded">
-                      {brg.kodeBarang}
-                    </span>
-                    <h4 className="font-bold text-slate-900 text-xs mt-1">{brg.namaBarang}</h4>
-                    <p className="text-[11px] text-emerald-700 font-extrabold mt-0.5">
-                      Omset: Rp {totalOmsetBarang.toLocaleString('id-ID')}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-emerald-600 text-white shadow-sm">
-                      {totalQtyTerjual.toLocaleString('id-ID')} {brg.satuanUkuran}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+                  return (
+                    <tr key={brg.id} className="hover:bg-emerald-50/40 transition-colors">
+                      <td className="px-3 py-3 text-center font-bold text-slate-500">{index + 1}</td>
+                      <td className="px-3 py-3 font-bold text-slate-900">{brg.namaBarang}</td>
+                      <td className="px-3 py-3 text-center font-bold">
+                        {totalQtyTerjual.toLocaleString('id-ID')} {brg.satuanUkuran}
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        <span className="font-black text-xs text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                          Rp {totalOmsetBarang.toLocaleString('id-ID')}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* 4. TABEL LAPORAN PENGIRIMAN (IN TRANSIT SHIPMENTS) */}
+      {/* 4. TABEL LAPORAN PENGIRIMAN (IN TRANSIT SHIPMENTS - STANDARD HTML TABLE) */}
       {/* ========================================================================= */}
       {(activeReportSection === 'ALL' || activeReportSection === 'PENGIRIMAN') && (
         <div className="glass-card rounded-2xl p-4 space-y-3 border-2 border-purple-300">
@@ -518,51 +540,59 @@ export default function DashboardPage() {
               <p className="text-[11px] text-slate-500">Seluruh mutasi pengiriman barang telah berhasil diterima oleh cabang tujuan.</p>
             </div>
           ) : (
-            <div className="space-y-2.5">
-              {inTransitShipments.map(t => {
-                const asal = branches.find(b => b.id === t.branchAsalId)?.namaBranch || t.branchAsalId;
-                const tujuan = branches.find(b => b.id === t.branchTujuanId)?.namaBranch || t.branchTujuanId;
+            <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+              <table className="w-full text-xs text-left text-slate-700">
+                <thead className="bg-purple-50 text-purple-950 font-extrabold uppercase tracking-wider border-b border-purple-200">
+                  <tr>
+                    <th className="px-3 py-2.5 text-center w-10">No</th>
+                    <th className="px-3 py-2.5">No. Mutasi & Tanggal</th>
+                    <th className="px-3 py-2.5">Rute (Asal ➔ Tujuan)</th>
+                    <th className="px-3 py-2.5">Rincian Barang</th>
+                    <th className="px-3 py-2.5 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {inTransitShipments.map((t, index) => {
+                    const asal = branches.find(b => b.id === t.branchAsalId)?.namaBranch || t.branchAsalId;
+                    const tujuan = branches.find(b => b.id === t.branchTujuanId)?.namaBranch || t.branchTujuanId;
 
-                return (
-                  <div key={t.id} className="p-3 bg-purple-50/70 border border-purple-200 rounded-xl space-y-2">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-purple-600 text-white rounded">
-                          {t.noMutasi}
-                        </span>
-                        <div className="text-xs font-extrabold text-purple-950 mt-1 flex items-center gap-1">
+                    return (
+                      <tr key={t.id} className="hover:bg-purple-50/40 transition-colors">
+                        <td className="px-3 py-3 text-center font-bold text-slate-500">{index + 1}</td>
+                        <td className="px-3 py-3">
+                          <span className="font-black text-purple-900">{t.noMutasi}</span>
+                          <div className="text-[10px] text-slate-500">
+                            {new Date(t.tanggalKirim).toLocaleDateString('id-ID')} ({t.userPengirimNama})
+                          </div>
+                        </td>
+                        <td className="px-3 py-3 font-semibold">
                           <span>{asal}</span> ➔ <span className="text-purple-700">{tujuan}</span>
-                        </div>
-                        <div className="text-[11px] text-slate-500 font-medium">
-                          Dikirim pada: {new Date(t.tanggalKirim).toLocaleDateString('id-ID')} oleh <b>{t.userPengirimNama}</b>
-                        </div>
-                      </div>
-
-                      <Link
-                        href="/transfer"
-                        className="px-2.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-black flex items-center gap-1 shadow-sm active:scale-95 transition-all"
-                      >
-                        <span>Terima</span> <ArrowUpRight className="w-3.5 h-3.5" />
-                      </Link>
-                    </div>
-
-                    {/* Items Breakdown */}
-                    <div className="p-2 bg-white rounded-lg border border-purple-100 space-y-1">
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Rincian Barang Dikirim:</span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {t.items.map((item, idx) => {
-                          const brg = barangList.find(b => b.id === item.barangId);
-                          return (
-                            <span key={idx} className="px-2 py-0.5 bg-slate-100 text-slate-800 rounded font-semibold text-xs">
-                              {brg?.namaBarang || item.barangId}: <b>{item.jumlah} {brg?.satuanUkuran || 'unit'}</b>
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+                        </td>
+                        <td className="px-3 py-3">
+                          <div className="flex flex-wrap gap-1">
+                            {t.items.map((item, idx) => {
+                              const brg = barangList.find(b => b.id === item.barangId);
+                              return (
+                                <span key={idx} className="px-1.5 py-0.5 bg-purple-50 border border-purple-200 rounded text-[11px]">
+                                  {brg?.namaBarang || item.barangId}: <b>{item.jumlah} {brg?.satuanUkuran || 'unit'}</b>
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          <Link
+                            href="/transfer"
+                            className="px-2.5 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-black inline-flex items-center gap-1 shadow-sm active:scale-95 transition-all"
+                          >
+                            <span>Terima</span> <ArrowUpRight className="w-3.5 h-3.5" />
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
