@@ -72,7 +72,7 @@ function doPost(e) {
     if (action === 'SYNC_ALL') {
       writeSheetData(ss, 'Master_Barang', data.barang, ['id', 'kodeBarang', 'namaBarang', 'nilaiUkuran', 'satuanUkuran', 'keterangan', 'isAktif']);
       writeSheetData(ss, 'Master_Branch', data.branches, ['id', 'kodeBranch', 'namaBranch', 'tipe', 'alamat', 'isAktif']);
-      writeSheetData(ss, 'Users', data.users, ['id', 'nama', 'username', 'roleId', 'assignedBranchIds', 'isAktif']);
+      writeSheetData(ss, 'Users', data.users, ['id', 'nama', 'username', 'pin', 'roleId', 'assignedBranchIds', 'isAktif']);
       writeSheetData(ss, 'Roles', data.roles, ['id', 'namaRole', 'deskripsi']);
       writeSheetData(ss, 'Stok_Lokasi', data.stok, ['branchId', 'barangId', 'jumlahStok']);
       writeSheetData(ss, 'Riwayat_Produksi', data.produksi, ['id', 'noProduksi', 'branchId', 'items', 'tanggal', 'userId', 'userNama']);
