@@ -153,6 +153,14 @@ export default function DashboardPage() {
       (selectedBranchIds.includes(t.branchAsalId) || selectedBranchIds.includes(t.branchTujuanId))
   );
 
+  if (!auth.user) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5 pb-8">
       {/* Welcome Banner */}
