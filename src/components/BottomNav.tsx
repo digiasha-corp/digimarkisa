@@ -84,7 +84,7 @@ export default function BottomNav() {
   ].filter(item => item.show);
 
   return (
-    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-xl w-full max-w-[540px] min-w-[320px]">
+    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-xl w-full max-w-[1280px] min-w-[320px]">
       <div className="flex items-center justify-around px-2 py-2 overflow-x-auto no-scrollbar">
         {navItems.map(item => {
           const isActive = pathname === item.href;

@@ -16,15 +16,15 @@ body {
   user-select: none;
 }
 
-/* Centered Mobile Web App Container */
+/* Centered Responsive Web App Container (Mobile & Desktop Flexible) */
 .mobile-container {
   width: 100%;
   min-width: 320px;
-  max-width: 540px; /* Optimal centered mobile app max width */
+  max-width: 1280px; /* Responsive flexible layout for mobile and desktop */
   margin: 0 auto;
   min-height: 100vh;
   background-color: #ffffff;
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
   position: relative;
   display: flex;
   flex-direction: column;
