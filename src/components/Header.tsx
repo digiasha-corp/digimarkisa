@@ -5,9 +5,10 @@ import { getCurrentAuth, AuthState, logout } from '@/lib/auth-store';
 import { triggerAutoSyncIfNeeded } from '@/lib/google-sheets';
 import { UserCheck, Building2, LogOut } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 export default function Header() {
+  const pathname = usePathname();
   const router = useRouter();
   const [auth, setAuth] = useState<AuthState>({ user: null, role: null, allowedBranches: [] });
 
@@ -33,11 +34,13 @@ export default function Header() {
   const handleLogout = () => {
     if (confirm('Apakah Anda yakin ingin keluar dari akun ini?')) {
       logout();
+      window.dispatchEvent(new Event('userSwitched'));
       router.push('/login');
     }
   };
 
-  if (!auth.user) return null;
+  // Hide Header completely on Login Page or when user is not logged in
+  if (pathname === '/login' || !auth.user) return null;
 
   return (
     <header className="sticky top-0 z-40 glass-header px-4 py-3 border-b border-slate-100 w-full min-w-[320px]">

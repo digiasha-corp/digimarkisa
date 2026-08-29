@@ -107,4 +107,7 @@ export function switchUserAccount(userId: string): { success: boolean; user?: Us
 
 export function logout(): void {
   storageLogoutUser();
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('userSwitched'));
+  }
 }
