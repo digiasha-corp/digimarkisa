@@ -129,16 +129,6 @@ export default function LoginPage() {
         </form>
       </div>
 
-      {/* Info Card */}
-      <div className="p-4 bg-amber-50/60 border border-amber-200/70 rounded-2xl text-[11px] text-amber-900 space-y-1 font-medium">
-        <p className="font-bold">💡 Contoh Username Login Demo:</p>
-        <ul className="list-disc list-inside space-y-0.5 text-slate-700">
-          <li><b>Super Admin / Owner</b>: Username <code className="bg-amber-100 px-1 py-0.5 rounded font-mono">admin</code> (PIN: <code className="font-mono">1234</code>)</li>
-          <li><b>Operator Produksi</b>: Username <code className="bg-amber-100 px-1 py-0.5 rounded font-mono">produksi</code> (PIN: <code className="font-mono">1111</code>)</li>
-          <li><b>Staff Gudang</b>: Username <code className="bg-amber-100 px-1 py-0.5 rounded font-mono">gudang</code> (PIN: <code className="font-mono">2222</code>)</li>
-          <li><b>Kasir Store</b>: Username <code className="bg-amber-100 px-1 py-0.5 rounded font-mono">kasir</code> (PIN: <code className="font-mono">3333</code>)</li>
-        </ul>
-      </div>
     </div>
   );
 }
