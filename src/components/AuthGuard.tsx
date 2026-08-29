@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { getCurrentAuth } from '@/lib/auth-store';
 import { initializeStorageIfNeeded } from '@/lib/storage';
+import { fetchFromGoogleSheets } from '@/lib/google-sheets';
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -12,6 +13,10 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     initializeStorageIfNeeded();
+
+    // Fetch live data from Google Sheets on initial load
+    fetchFromGoogleSheets().catch(() => {});
+
     const auth = getCurrentAuth();
 
     if (pathname !== '/login' && !auth.user) {

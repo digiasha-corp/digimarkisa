@@ -7,11 +7,14 @@ import { switchUserAccount } from '@/lib/auth-store';
 import { User as UserType } from '@/lib/types';
 import { KeyRound, Sparkles, Lock, User, ShieldAlert, CheckCircle2 } from 'lucide-react';
 
+import { fetchFromGoogleSheets } from '@/lib/google-sheets';
+
 export default function LoginPage() {
   const router = useRouter();
   const [usernameInput, setUsernameInput] = useState<string>('');
   const [pinInput, setPinInput] = useState<string>('');
   const [errorMsg, setErrorMsg] = useState<string>('');
+  const [isFetchingLive, setIsFetchingLive] = useState<boolean>(false);
 
   // Forced Change PIN State
   const [pendingUser, setPendingUser] = useState<UserType | null>(null);
@@ -21,9 +24,10 @@ export default function LoginPage() {
 
   useEffect(() => {
     initializeStorageIfNeeded();
+    fetchFromGoogleSheets().catch(() => {});
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
 
@@ -32,6 +36,10 @@ export default function LoginPage() {
       setErrorMsg('Silakan masukkan Username / ID Pengguna Anda.');
       return;
     }
+
+    setIsFetchingLive(true);
+    await fetchFromGoogleSheets().catch(() => {});
+    setIsFetchingLive(false);
 
     const allUsers = getUserList().filter(u => u.isAktif);
     

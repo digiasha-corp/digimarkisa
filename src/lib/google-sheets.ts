@@ -1,4 +1,43 @@
-import { getGoogleSheetsConfig, getBarangList, getBranchList, getUserList, getRoleList, getStokLokasiList, getProduksiList, getTransferList, getPenjualanList } from './storage';
+import {
+  getGoogleSheetsConfig,
+  getBarangList,
+  getBranchList,
+  getUserList,
+  getRoleList,
+  getStokLokasiList,
+  getProduksiList,
+  getTransferList,
+  getPenjualanList,
+  bulkImportStorageData,
+} from './storage';
+
+export async function fetchFromGoogleSheets(): Promise<{ success: boolean; message: string }> {
+  const config = getGoogleSheetsConfig();
+  if (!config.webAppUrl) {
+    return { success: false, message: 'URL Google Apps Script Web App belum dikonfigurasi.' };
+  }
+
+  try {
+    const res = await fetch('/api/sheets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: config.webAppUrl,
+        payload: { action: 'GET_ALL' },
+      }),
+    });
+
+    const result = await res.json();
+    if (res.ok && result.success && result.data) {
+      bulkImportStorageData(result.data);
+      return { success: true, message: 'Data live berhasil dibaca dari Google Sheets!' };
+    } else {
+      return { success: false, message: result.error || 'Gagal membaca data dari Google Sheets.' };
+    }
+  } catch (err: any) {
+    return { success: false, message: err.message || 'Koneksi ke proxy gagal.' };
+  }
+}
 
 export async function syncToGoogleSheets(): Promise<{ success: boolean; message: string }> {
   const config = getGoogleSheetsConfig();
@@ -49,12 +88,11 @@ export function triggerAutoSyncIfNeeded(): void {
   }
 }
 
-
 export function generateGoogleAppsScriptCode(): string {
   return `/**
- * Google Apps Script Web App Backend untuk Aplikasi Mobile Stok Sirup Markisa
+ * Google Apps Script Web App Backend untuk Aplikasi Mobile Stok Sirup Markisa (2-Way Realtime Backend)
  * Petunjuk Pemasangan:
- * 1. Buka Google Spreadsheet baru di https://sheets.new
+ * 1. Buka Google Spreadsheet di https://sheets.new
  * 2. Klik Ekstensi -> Apps Script
  * 3. Hapus kode bawaan dan Tempelkan seluruh kode ini.
  * 4. Klik "Deploy" -> "New deployment" -> Select type: "Web app"
@@ -62,12 +100,20 @@ export function generateGoogleAppsScriptCode(): string {
  * 6. Klik Deploy, Berikan Izin Access, lalu Salin Web App URL dan masukkan di Pengaturan Aplikasi.
  */
 
+function doGet(e) {
+  return handleGetAll();
+}
+
 function doPost(e) {
   try {
     var contents = JSON.parse(e.postData.contents);
     var action = contents.action;
     var data = contents.data;
     var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+    if (action === 'GET_ALL') {
+      return handleGetAll();
+    }
 
     if (action === 'SYNC_ALL') {
       writeSheetData(ss, 'Master_Barang', data.barang, ['id', 'kodeBarang', 'namaBarang', 'nilaiUkuran', 'satuanUkuran', 'keterangan', 'isAktif']);
@@ -93,6 +139,65 @@ function doPost(e) {
     return ContentService.createTextOutput(JSON.stringify({ success: false, error: err.toString() }))
       .setMimeType(ContentService.MimeType.JSON);
   }
+}
+
+function handleGetAll() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var barang = readSheetData(ss, 'Master_Barang');
+  var branches = readSheetData(ss, 'Master_Branch');
+  var users = readSheetData(ss, 'Users');
+  var roles = readSheetData(ss, 'Roles');
+  var stok = readSheetData(ss, 'Stok_Lokasi');
+  var produksi = readSheetData(ss, 'Riwayat_Produksi');
+  var transfer = readSheetData(ss, 'Riwayat_Transfer');
+  var penjualan = readSheetData(ss, 'Riwayat_Penjualan');
+
+  return ContentService.createTextOutput(JSON.stringify({
+    success: true,
+    message: 'Data live berhasil dibaca dari Google Sheets!',
+    data: {
+      barang: barang,
+      branches: branches,
+      users: users,
+      roles: roles,
+      stok: stok,
+      produksi: produksi,
+      transfer: transfer,
+      penjualan: penjualan
+    }
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function readSheetData(ss, sheetName) {
+  var sheet = ss.getSheetByName(sheetName);
+  if (!sheet) return [];
+  var data = sheet.getDataRange().getValues();
+  if (!data || data.length < 2) return [];
+
+  var headers = data[0];
+  var result = [];
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    var obj = {};
+    var hasValue = false;
+    for (var h = 0; h < headers.length; h++) {
+      var key = headers[h];
+      var val = row[h];
+      if (val !== '' && val !== null && val !== undefined) {
+        hasValue = true;
+      }
+      if (typeof val === 'string' && (val.startsWith('{') || val.startsWith('['))) {
+        try {
+          val = JSON.parse(val);
+        } catch (err) {}
+      }
+      obj[key] = val;
+    }
+    if (hasValue) {
+      result.push(obj);
+    }
+  }
+  return result;
 }
 
 function writeSheetData(ss, sheetName, items, headers) {

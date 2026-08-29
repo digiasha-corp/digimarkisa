@@ -767,3 +767,44 @@ export function getGoogleSheetsConfig(): GoogleSheetsConfig {
 export function saveGoogleSheetsConfig(config: GoogleSheetsConfig): void {
   saveToStorage(STORAGE_KEYS.GOOGLE_SHEETS, config);
 }
+
+export function bulkImportStorageData(data: {
+  barang?: Barang[];
+  branches?: Branch[];
+  users?: User[];
+  roles?: Role[];
+  stok?: StokLokasi[];
+  produksi?: TransaksiProduksi[];
+  transfer?: TransaksiTransfer[];
+  penjualan?: TransaksiPenjualan[];
+}): void {
+  if (!data) return;
+  if (data.barang && Array.isArray(data.barang) && data.barang.length > 0) {
+    saveToStorage(STORAGE_KEYS.BARANG, data.barang);
+  }
+  if (data.branches && Array.isArray(data.branches) && data.branches.length > 0) {
+    saveToStorage(STORAGE_KEYS.BRANCHES, data.branches);
+  }
+  if (data.users && Array.isArray(data.users) && data.users.length > 0) {
+    saveToStorage(STORAGE_KEYS.USERS, data.users);
+  }
+  if (data.roles && Array.isArray(data.roles) && data.roles.length > 0) {
+    saveToStorage(STORAGE_KEYS.ROLES, data.roles);
+  }
+  if (data.stok && Array.isArray(data.stok)) {
+    saveToStorage(STORAGE_KEYS.STOK, data.stok);
+  }
+  if (data.produksi && Array.isArray(data.produksi)) {
+    saveToStorage(STORAGE_KEYS.PRODUKSI, data.produksi);
+  }
+  if (data.transfer && Array.isArray(data.transfer)) {
+    saveToStorage(STORAGE_KEYS.TRANSFER, data.transfer);
+  }
+  if (data.penjualan && Array.isArray(data.penjualan)) {
+    saveToStorage(STORAGE_KEYS.PENJUALAN, data.penjualan);
+  }
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('storageMutation'));
+    window.dispatchEvent(new Event('userSwitched'));
+  }
+}
