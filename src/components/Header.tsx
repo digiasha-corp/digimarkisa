@@ -2,16 +2,14 @@
 
 import React, { useEffect, useState } from 'react';
 import { getCurrentAuth, AuthState, logout } from '@/lib/auth-store';
-import { syncToGoogleSheets, triggerAutoSyncIfNeeded } from '@/lib/google-sheets';
-import { RefreshCw, UserCheck, Building2, LogOut } from 'lucide-react';
+import { triggerAutoSyncIfNeeded } from '@/lib/google-sheets';
+import { UserCheck, Building2, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 export default function Header() {
   const router = useRouter();
   const [auth, setAuth] = useState<AuthState>({ user: null, role: null, allowedBranches: [] });
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [syncStatus, setSyncStatus] = useState<string | null>(null);
 
   useEffect(() => {
     setAuth(getCurrentAuth());
@@ -31,15 +29,6 @@ export default function Header() {
       window.removeEventListener('storageMutation', handleMutation);
     };
   }, []);
-
-  const handleSync = async () => {
-    setIsSyncing(true);
-    setSyncStatus('Syncing...');
-    const res = await syncToGoogleSheets();
-    setIsSyncing(false);
-    setSyncStatus(res.success ? 'Synced OK' : 'Local Only');
-    setTimeout(() => setSyncStatus(null), 3000);
-  };
 
   const handleLogout = () => {
     if (confirm('Apakah Anda yakin ingin keluar dari akun ini?')) {
@@ -78,25 +67,15 @@ export default function Header() {
           </div>
         </div>
 
-        {/* User Account Badge, Sync, & Logout */}
+        {/* User Account Badge & Logout */}
         <div className="flex items-center gap-2">
-          <button
-            onClick={handleSync}
-            disabled={isSyncing}
-            className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 active:scale-95 transition-all flex items-center gap-1 text-xs font-semibold bg-slate-50 border border-slate-200"
-            title="Sinkronkan ke Google Sheets"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 text-amber-600 ${isSyncing ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">{syncStatus || 'Sync'}</span>
-          </button>
-
           <Link
             href="/login"
-            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-900 text-white rounded-xl text-xs font-semibold hover:bg-slate-800 active:scale-95 transition-all shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 text-white rounded-xl text-xs font-semibold hover:bg-slate-800 active:scale-95 transition-all shadow-sm"
             title="Ganti Akun"
           >
             <UserCheck className="w-3.5 h-3.5 text-amber-400" />
-            <span className="truncate max-w-[90px]">{auth.user.nama.split(' ')[0]}</span>
+            <span className="truncate max-w-[100px]">{auth.user.nama.split(' ')[0]}</span>
           </Link>
 
           <button
