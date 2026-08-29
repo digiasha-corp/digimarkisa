@@ -752,7 +752,7 @@ export function addPenjualanTransaction(data: {
 // Google Sheets Config API
 export const HARDCODED_GOOGLE_SHEETS_URL =
   process.env.NEXT_PUBLIC_GOOGLE_SHEETS_URL ||
-  'https://script.google.com/macros/s/AKfycbys7Z8kqSpB8YA1hHgbRT_ZxYFj/exec';
+  'https://script.google.com/macros/s/AKfycbys7Z8kqSpB8YAlhHgbRT_ZxYFjxEmMj0XXhOfs3ab3eAJY3UdjHCc2eKvWwmzwRp4A/exec';
 
 export function getGoogleSheetsConfig(): GoogleSheetsConfig {
   const stored = getFromStorage<GoogleSheetsConfig>(STORAGE_KEYS.GOOGLE_SHEETS, {
