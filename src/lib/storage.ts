@@ -248,6 +248,12 @@ const STORAGE_KEYS = {
   GOOGLE_SHEETS: 'stock_app_gsheet_config',
 };
 
+let isImportingFromSheets = false;
+
+export function setImportingFlag(val: boolean): void {
+  isImportingFromSheets = val;
+}
+
 // Helper Storage Getters & Setters
 export function getFromStorage<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback;
@@ -264,7 +270,7 @@ export function saveToStorage<T>(key: string, data: T): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(key, JSON.stringify(data));
-    if (key !== STORAGE_KEYS.CURRENT_USER && key !== STORAGE_KEYS.GOOGLE_SHEETS) {
+    if (!isImportingFromSheets && key !== STORAGE_KEYS.CURRENT_USER && key !== STORAGE_KEYS.GOOGLE_SHEETS) {
       window.dispatchEvent(new CustomEvent('storageMutation', { detail: { key } }));
     }
   } catch (e) {
@@ -276,12 +282,12 @@ export function saveToStorage<T>(key: string, data: T): void {
 export function initializeStorageIfNeeded(): void {
   if (typeof window === 'undefined') return;
   if (!localStorage.getItem(STORAGE_KEYS.BARANG)) {
-    saveToStorage(STORAGE_KEYS.BARANG, INITIAL_BARANG);
+    localStorage.setItem(STORAGE_KEYS.BARANG, JSON.stringify(INITIAL_BARANG));
   }
 
   const rawBranches = localStorage.getItem(STORAGE_KEYS.BRANCHES);
   if (!rawBranches) {
-    saveToStorage(STORAGE_KEYS.BRANCHES, INITIAL_BRANCHES);
+    localStorage.setItem(STORAGE_KEYS.BRANCHES, JSON.stringify(INITIAL_BRANCHES));
   } else {
     try {
       const parsed: any[] = JSON.parse(rawBranches);
@@ -294,18 +300,18 @@ export function initializeStorageIfNeeded(): void {
         return b;
       });
       if (needsMigration) {
-        saveToStorage(STORAGE_KEYS.BRANCHES, normalized);
+        localStorage.setItem(STORAGE_KEYS.BRANCHES, JSON.stringify(normalized));
       }
     } catch (e) {}
   }
   if (!localStorage.getItem(STORAGE_KEYS.ROLES)) {
-    saveToStorage(STORAGE_KEYS.ROLES, INITIAL_ROLES);
+    localStorage.setItem(STORAGE_KEYS.ROLES, JSON.stringify(INITIAL_ROLES));
   }
   if (!localStorage.getItem(STORAGE_KEYS.USERS)) {
-    saveToStorage(STORAGE_KEYS.USERS, INITIAL_USERS);
+    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(INITIAL_USERS));
   }
   if (!localStorage.getItem(STORAGE_KEYS.STOK)) {
-    saveToStorage(STORAGE_KEYS.STOK, INITIAL_STOK);
+    localStorage.setItem(STORAGE_KEYS.STOK, JSON.stringify(INITIAL_STOK));
   }
 }
 
@@ -808,29 +814,34 @@ export function bulkImportStorageData(data: {
   penjualan?: TransaksiPenjualan[];
 }): void {
   if (!data) return;
-  if (data.barang && Array.isArray(data.barang) && data.barang.length > 0) {
-    saveToStorage(STORAGE_KEYS.BARANG, data.barang);
-  }
-  if (data.branches && Array.isArray(data.branches) && data.branches.length > 0) {
-    saveToStorage(STORAGE_KEYS.BRANCHES, data.branches);
-  }
-  if (data.users && Array.isArray(data.users) && data.users.length > 0) {
-    saveToStorage(STORAGE_KEYS.USERS, data.users);
-  }
-  if (data.roles && Array.isArray(data.roles) && data.roles.length > 0) {
-    saveToStorage(STORAGE_KEYS.ROLES, data.roles);
-  }
-  if (data.stok && Array.isArray(data.stok)) {
-    saveToStorage(STORAGE_KEYS.STOK, data.stok);
-  }
-  if (data.produksi && Array.isArray(data.produksi)) {
-    saveToStorage(STORAGE_KEYS.PRODUKSI, data.produksi);
-  }
-  if (data.transfer && Array.isArray(data.transfer)) {
-    saveToStorage(STORAGE_KEYS.TRANSFER, data.transfer);
-  }
-  if (data.penjualan && Array.isArray(data.penjualan)) {
-    saveToStorage(STORAGE_KEYS.PENJUALAN, data.penjualan);
+  setImportingFlag(true);
+  try {
+    if (data.barang && Array.isArray(data.barang) && data.barang.length > 0) {
+      saveToStorage(STORAGE_KEYS.BARANG, data.barang);
+    }
+    if (data.branches && Array.isArray(data.branches) && data.branches.length > 0) {
+      saveToStorage(STORAGE_KEYS.BRANCHES, data.branches);
+    }
+    if (data.users && Array.isArray(data.users) && data.users.length > 0) {
+      saveToStorage(STORAGE_KEYS.USERS, data.users);
+    }
+    if (data.roles && Array.isArray(data.roles) && data.roles.length > 0) {
+      saveToStorage(STORAGE_KEYS.ROLES, data.roles);
+    }
+    if (data.stok && Array.isArray(data.stok)) {
+      saveToStorage(STORAGE_KEYS.STOK, data.stok);
+    }
+    if (data.produksi && Array.isArray(data.produksi)) {
+      saveToStorage(STORAGE_KEYS.PRODUKSI, data.produksi);
+    }
+    if (data.transfer && Array.isArray(data.transfer)) {
+      saveToStorage(STORAGE_KEYS.TRANSFER, data.transfer);
+    }
+    if (data.penjualan && Array.isArray(data.penjualan)) {
+      saveToStorage(STORAGE_KEYS.PENJUALAN, data.penjualan);
+    }
+  } finally {
+    setImportingFlag(false);
   }
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new Event('storageMutation'));
